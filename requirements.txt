@@ -1,0 +1,15 @@
+# Core application dependencies for VADL (Phase 1)
+# Pinned to secure, audited, patch-level releases
+Flask==3.1.3
+Werkzeug==3.1.9
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.38
+Flask-Migrate==4.1.0
+alembic==1.14.1
+python-dotenv==1.2.4
+# Production WSGI servers: Gunicorn for Linux/Docker, Waitress for Windows local production runs
+gunicorn==23.0.0; sys_platform != "win32"
+waitress==3.0.2; sys_platform == "win32"
+# PDF security reporting (Phase 7)
+reportlab==5.1.0
+pillow==13.0.0
