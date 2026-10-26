@@ -1,0 +1,90 @@
+{
+  "@programName": "OWASP ZAP",
+  "@version": "2.15.0",
+  "@generated": "Mon, 26 Oct 2026 12:00:00",
+  "site": [
+    {
+      "@name": "http://127.0.0.1:5000",
+      "@host": "127.0.0.1",
+      "@port": "5000",
+      "@ssl": "false",
+      "alerts": [
+        {
+          "pluginid": "10020",
+          "alertRef": "10020-1",
+          "alert": "Anti-clickjacking Header (X-Frame-Options) Missing",
+          "name": "Anti-clickjacking Header (X-Frame-Options) Missing",
+          "riskcode": "2",
+          "confidence": "2",
+          "riskdesc": "Medium (Medium)",
+          "desc": "The response does not include either Content-Security-Policy with 'frame-ancestors' directive or X-Frame-Options to protect against 'ClickJacking' attacks.",
+          "instances": [
+            {
+              "uri": "http://127.0.0.1:5000/lab/vulnerable/headers",
+              "method": "GET",
+              "param": "",
+              "attack": "",
+              "evidence": ""
+            }
+          ],
+          "count": "1",
+          "solution": "Modern Web applications should utilize Content Security Policy frame-ancestors directive or X-Frame-Options: DENY.",
+          "reference": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options",
+          "cweid": "16",
+          "wascid": "15",
+          "sourceid": "3"
+        },
+        {
+          "pluginid": "10038",
+          "alertRef": "10038-1",
+          "alert": "Content Security Policy (CSP) Header Not Set",
+          "name": "Content Security Policy (CSP) Header Not Set",
+          "riskcode": "2",
+          "confidence": "3",
+          "riskdesc": "Medium (High)",
+          "desc": "Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks.",
+          "instances": [
+            {
+              "uri": "http://127.0.0.1:5000/lab/vulnerable/headers",
+              "method": "GET",
+              "param": "",
+              "attack": "",
+              "evidence": ""
+            }
+          ],
+          "count": "1",
+          "solution": "Ensure that your web server sets Content-Security-Policy response headers.",
+          "reference": "https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP",
+          "cweid": "16",
+          "wascid": "15",
+          "sourceid": "3"
+        },
+        {
+          "pluginid": "40018",
+          "alertRef": "40018-1",
+          "alert": "SQL Injection",
+          "name": "SQL Injection",
+          "riskcode": "3",
+          "confidence": "3",
+          "riskdesc": "High (High)",
+          "desc": "SQL injection vector found in parameter category.",
+          "instances": [
+            {
+              "uri": "http://127.0.0.1:5000/lab/vulnerable/sqli?category=hardware",
+              "method": "GET",
+              "param": "category",
+              "attack": "' OR '1'='1",
+              "evidence": "CONFIDENTIAL_LAB_FLAG{vadl_sqli_success}"
+            }
+          ],
+          "count": "1",
+          "solution": "Use parameterized queries and prepared statements.",
+          "reference": "https://owasp.org/www-community/attacks/SQL_Injection",
+          "cweid": "89",
+          "wascid": "19",
+          "sourceid": "1"
+        }
+      ]
+    }
+  ]
+}

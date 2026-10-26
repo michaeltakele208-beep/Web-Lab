@@ -1,0 +1,14 @@
+{
+  "remediation_id": 1,
+  "scenario_id": "SQLI-AUTH-01",
+  "title": "Remediate SQL Injection in Catalog Search",
+  "workflow_status": "VERIFIED",
+  "verification_status": "VERIFIED",
+  "verified_at": "2026-10-26T13:14:00Z",
+  "verified_by_user": "analyst@vadl.local",
+  "target_edition": "secure",
+  "mitigation_notes": "Implemented parameterized SQL placeholder queries using SQLAlchemy text(:cat) parameter binding.",
+  "sanitized_verification_evidence": "Tested payload: ' OR '1'='1 against /lab/secure/sqli. HTTP 200 returned. Parameterized query treated input as literal string. Zero unauthorized records exposed.",
+  "evidence_sha256": "14a6839d3a29eb005363ab54dd40fa505f34b79e1e896bce1ed4f52ebf523cda",
+  "tamper_evident_status": "VALID_AND_INTACT"
+}

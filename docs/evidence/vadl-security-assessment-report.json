@@ -1,0 +1,77 @@
+{
+  "report_metadata": {
+    "report_id": "61c3de31-4a88-4d83-8dc2-bf0aba0b36c3",
+    "project_name": "Vulnerability Assessment and Defense Lab (VADL)",
+    "report_type": "security_scan",
+    "generated_at": "2026-10-26T13:14:22.013499+00:00",
+    "generated_by": "analyst@vadl.local"
+  },
+  "assessment_scope": {
+    "target_id": 1,
+    "target_name": "VADL Local Laboratory Target",
+    "target_url": "http://127.0.0.1:5000",
+    "target_edition": null,
+    "is_authorized_scope": true
+  },
+  "scan_execution": {
+    "id": 1,
+    "uuid": "61c3de31-4a88-4d83-8dc2-bf0aba0b36c3",
+    "scanner_type": "bandit",
+    "scan_profile": "baseline",
+    "status": "COMPLETED",
+    "tool_version": null,
+    "duration_seconds": null,
+    "started_at": null,
+    "completed_at": null,
+    "error_message": null
+  },
+  "findings_summary": {
+    "total_findings": 2,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "informational": 0
+  },
+  "detailed_findings": [
+    {
+      "id": 1,
+      "title": "SQL Injection String Formatting Vulnerability",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "status": "RESOLVED",
+      "fingerprint": "fc566109fb79fe92b60f49e4a14ff9a35daf19ca3381ec3b986aaf5300458115",
+      "cwe_id": "CWE-89",
+      "owasp_category": "A03:2021-Injection",
+      "vulnerability_identifier": "B608",
+      "target_component": "app/lab/vulnerable_blueprint.py",
+      "description": "Possible SQL injection vector via dynamic string interpolation in search handler.",
+      "remediation_advice": "Use SQLAlchemy parameter binding or db.session.execute(statement, params).",
+      "evidence_snippet": "SELECT * FROM lab_products WHERE category = '' OR '1'='1'",
+      "is_lab_scenario": false,
+      "scenario_id": null,
+      "first_detected_at": "2026-10-26T13:14:21.847707",
+      "last_detected_at": "2026-10-26T13:14:21.847707"
+    },
+    {
+      "id": 2,
+      "title": "Cross-Site Scripting Unescaped Template Rendering",
+      "severity": "MEDIUM",
+      "confidence": "HIGH",
+      "status": "NEW",
+      "fingerprint": "8f91d8298c71f206e621ab54840ef7b8f92828fcb711c35b8d5b2751880e5eca",
+      "cwe_id": "CWE-79",
+      "owasp_category": "A03:2021-Injection",
+      "vulnerability_identifier": "B703",
+      "target_component": "app/templates/lab/vulnerable_guestbook.html",
+      "description": "User-supplied guestbook message displayed without HTML contextual escaping.",
+      "remediation_advice": "Enforce Jinja autoescaping or use html.escape() before presentation.",
+      "evidence_snippet": "<p>{{ message|safe }}</p>",
+      "is_lab_scenario": false,
+      "scenario_id": null,
+      "first_detected_at": "2026-10-26T13:14:21.847707",
+      "last_detected_at": "2026-10-26T13:14:21.847707"
+    }
+  ],
+  "limitations_and_disclaimer": "Absence of findings does not prove that an application is completely secure. Automated scanning tools evaluate specific patterns and rule subsets only."
+}
