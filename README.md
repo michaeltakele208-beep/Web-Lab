@@ -1,4 +1,4 @@
-# Web Lab — Security Posture & Vulnerability Assessment Platform
+# Web Lab Security Posture & Vulnerability Assessment Platform
 
 [![Project: Web Lab](https://img.shields.io/badge/Project-Web%20Lab-0284c7.svg)](docs/project-overview.md)
 [![Phase](https://img.shields.io/badge/Phase-8%20Final%20Capstone%20Audit-10b981.svg)](docs/architecture.md)
@@ -8,7 +8,7 @@
 [![Audit: pip-audit](https://img.shields.io/badge/Audit-pip--audit%20Zero%20Vulnerabilities-success)](https://pypi.org/project/pip-audit/)
 [![Linter: Ruff](https://img.shields.io/badge/Linter-Ruff%20Compliant-brightgreen)](https://docs.astral.sh/ruff/)
 
-An academic cybersecurity engineering platform developed for hands-on vulnerability assessment, live website posture grading, secure coding education, automated static code analysis, and empirical defensive remediation verification.
+A cybersecurity engineering platform developed for hands on vulnerability assessment, live website posture grading, secure coding education, automated static code analysis, and empirical defensive remediation verification.
 
 ---
 
@@ -24,25 +24,8 @@ The platform was engineered as an end-to-end practical capstone project demonstr
 6. **Empirical Remediation Verification Workflow**: Automated state-machine tracking where mitigations cannot be manually marked `VERIFIED` without passing reproducible regression suites, sealed with SHA-256 evidence integrity hashes.
 7. **Multi-Format Technical Reporting**: Pure-Python ReportLab PDF compilation and machine-readable JSON security exports for executive briefing and compliance review.
 
----
-
-## 2. Quick Evaluation & Access (No Separate Login Required)
-
-To streamline evaluation for reviewing faculty, instructors, and examiners, the platform eliminates unnecessary login navigation friction:
-
-* **Seamless 1-Click Role Switching**: Reviewers can switch instantly between **Security Analyst** and **Lab Administrator** sessions directly from the top navigation bar or the Operational Session banner on the dashboard without navigating away.
-* **In-Page Authentication Modal**: A streamlined modal dialog (`Sign In`) is accessible across all pages for custom credential entry without redirecting to a standalone login page.
-* **Pre-Seeded Demonstration Accounts**:
-  * **Security Analyst**: `analyst@vadl.local` / `AnalystPassword123!@` (Full scanning, assessment execution, remediation tracking, and report generation).
-  * **System Administrator**: `admin@vadl.local` / `AdminSecurePass123!@` (Target allowlist management, user administration, and system configuration).
-  * **Guest Session**: Read-only access to posture analytics, public lab benchmarks, and educational scenarios.
-
-> [!NOTE]
-> Standalone `/login` and `/register` endpoints remain fully functional under the hood to ensure full compatibility with automated headless integration test harnesses.
-
----
-
-## 3. Architecture & Security Controls
+-
+## 2. Architecture & Security Controls
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -83,7 +66,7 @@ To streamline evaluation for reviewing faculty, instructors, and examiners, the 
 
 ---
 
-## 4. Setup & Local Execution (Windows PowerShell)
+## 3. Setup & Local Execution
 
 ### Step 1: Initialize Virtual Environment
 ```powershell
@@ -117,7 +100,7 @@ Access the platform at `http://127.0.0.1:5000/`.
 
 ---
 
-## 5. Verification & Quality Assurance Suite
+## 4. Verification & Quality Assurance Suite
 
 All 149 automated tests execute offline against an isolated in-memory test database with zero external network dependencies:
 
@@ -141,37 +124,33 @@ All 149 automated tests execute offline against an isolated in-memory test datab
 
 ---
 
-## 6. Project Structure
+## 5. Project Structure
 
 ```
 Web Lab/
 ├── app/
-│   ├── admin/               # Administrator console & user role management
-│   ├── assessments/         # Assessment execution history & evidence logs
-│   ├── auth/                # Authentication, scrypt password hashing, session renewal
-│   ├── cli.py               # Out-of-band administrative CLI commands
-│   ├── config.py            # Environment configurations (Development, Testing, Production)
-│   ├── dashboard/           # Live telemetry, posture grading metrics, scan overview
-│   ├── extensions.py        # SQLAlchemy, Flask-Migrate, Flask-Login extensions
-│   ├── lab/                 # Dual-edition vulnerable & hardened educational scenarios
-│   ├── models/              # Normalized SQLAlchemy ORM models (Users, Scans, Findings)
-│   ├── remediations/        # Remediation state machine & regression verification
-│   ├── reports/             # ReportLab PDF compilation & JSON export generator
-│   ├── scanner/             # Multi-tool scanner orchestration, URL inspector, ZIP inspector
-│   ├── security/            # Cryptographic CSRF validation & sliding window rate limiter
-│   ├── static/              # CSS stylesheets, UI components, brand assets
-│   └── templates/           # Jinja2 templates (dashboard, scanners, base layout)
-├── docs/                    # Technical documentation, viva preparation, and evidence logs
-├── migrations/              # Alembic database schema migrations
-├── tests/                   # 149 automated pytest test suites
-├── requirements.txt         # Production runtime dependencies
-├── requirements-dev.txt     # Development and auditing tools
-├── pyproject.toml           # Ruff and pytest tool configuration
-└── run.py                   # Application entry point
-```
+│   ├── admin/               Administrator console & user role management
+│   ├── assessments/         Assessment execution history & evidence logs
+│   ├── auth/                Authentication, scrypt password hashing, session renewal
+│   ├── cli.py               Out-of-band administrative CLI commands
+│   ├── config.py            Environment configurations (Development, Testing, Production)
+│   ├── dashboard/           Live telemetry, posture grading metrics, scan overview
+│   ├── extensions.py        SQLAlchemy, Flask-Migrate, Flask-Login extensions
+│   ├── lab/                 Dual-edition vulnerable & hardened educational scenarios
+│   ├── models/              Normalized SQLAlchemy ORM models (Users, Scans, Findings)
+│   ├── remediations/        Remediation state machine & regression verification
+│   ├── reports/             ReportLab PDF compilation & JSON export generator
+│   ├── scanner/             Multi-tool scanner orchestration, URL inspector, ZIP inspector
+│   ├── security/            Cryptographic CSRF validation & sliding window rate limiter
+│   ├── static/              CSS stylesheets, UI components, brand assets
+│   └── templates/           Jinja2 templates (dashboard, scanners, base layout)
+├── docs/                    Technical documentation, viva preparation, and evidence logs
+├── migrations/              Alembic database schema migrations
+├── tests/                   149 automated pytest test suites
+├── requirements.txt         Production runtime dependencies
+├── requirements-dev.txt     Development and auditing tools
+├── pyproject.toml           Ruff and pytest tool configuration
+└── run.py                   Application entry point
 
----
 
-## 7. Educational Compliance & Ethics Notice
 
-This platform was developed solely for academic instruction, laboratory experimentation, and defensive security engineering. All offensive security testing adapters are strictly bound to local, authorized test targets on non-routable loopback addresses. Arbitrary public scanning is prohibited by design.
