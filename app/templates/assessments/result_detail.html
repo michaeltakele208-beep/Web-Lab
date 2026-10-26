@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Test Result: {{ result.test_identifier }} - Web Lab{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <h1 style="margin: 0;">Test Execution Result</h1>
+      <span class="badge badge-{{ 'admin' if result.target_edition == 'vulnerable' else 'user' }}">
+        {{ result.target_edition | upper }} EDITION
+      </span>
+    </div>
+    <p style="color: var(--text-secondary); margin-top: 0.25rem;">
+      Test Identifier: <span class="code-pill">{{ result.test_identifier }}</span> | Assessment Run #{{ result.assessment_id }}
+    </p>
+  </div>
+  <div>
+    <a href="{{ url_for('assessments.detail', assessment_id=result.assessment_id) }}" class="btn btn-secondary btn-sm">&larr; Back to Assessment #{{ result.assessment_id }}</a>
+  </div>
+</div>
+
+<div class="grid" style="grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Outcome Card -->
+  <div class="card">
+    <h2>Evaluation Outcome</h2>
+    <div style="margin-bottom: 1rem;">
+      {% if result.outcome == 'VULNERABILITY_CONFIRMED' %}
+        <div style="padding: 1rem; border-radius: 6px; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3);">
+          <strong style="color: #ef4444; font-size: 1.1rem; display: block; margin-bottom: 0.25rem;">VULNERABILITY CONFIRMED</strong>
+          <p style="margin: 0; font-size: 0.9rem;">The controlled test successfully reproduced the documented weakness in the target edition.</p>
+        </div>
+      {% elif result.outcome == 'SECURITY_CHECK_PASSED' %}
+        <div style="padding: 1rem; border-radius: 6px; background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);">
+          <strong style="color: #10b981; font-size: 1.1rem; display: block; margin-bottom: 0.25rem;">SECURITY CHECK PASSED</strong>
+          <p style="margin: 0; font-size: 0.9rem;">The defensive control behaved as intended; the attack payload was neutralized.</p>
+        </div>
+      {% elif result.outcome == 'VULNERABILITY_NOT_REPRODUCED' %}
+        <div style="padding: 1rem; border-radius: 6px; background-color: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3);">
+          <strong style="color: #3b82f6; font-size: 1.1rem; display: block; margin-bottom: 0.25rem;">VULNERABILITY NOT REPRODUCED</strong>
+          <p style="margin: 0; font-size: 0.9rem;">The expected weakness was not observed. Note: This does not prove the application is completely secure.</p>
+        </div>
+      {% elif result.outcome == 'ERROR' %}
+        <div style="padding: 1rem; border-radius: 6px; background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3);">
+          <strong style="color: #f59e0b; font-size: 1.1rem; display: block; margin-bottom: 0.25rem;">EXECUTION ERROR: {{ result.error_category or 'GENERAL' }}</strong>
+          <p style="margin: 0; font-size: 0.9rem;">The test could not produce a trustworthy result due to a target or runtime error.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
+      <div>
+        <p><strong>Scenario:</strong> <span class="code-pill">{{ result.scenario_id }}</span></p>
+        <p><strong>Duration:</strong> {{ result.duration_ms }} ms</p>
+      </div>
+      <div>
+        <p><strong>Started:</strong> {{ result.started_at.strftime('%H:%M:%S.%f')[:-3] }}</p>
+        <p><strong>Completed:</strong> {{ result.completed_at.strftime('%H:%M:%S.%f')[:-3] }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scenario Reference Dossier Card -->
+  <div class="card">
+    <h2>Scenario Context</h2>
+    {% if scenario %}
+      <p><strong>Title:</strong> {{ scenario.title }}</p>
+      <p><strong>Category:</strong> {{ scenario.category }}</p>
+      <p><strong>OWASP:</strong> {{ scenario.owasp_reference }}</p>
+      <p><strong>Remediation:</strong></p>
+      <p style="font-size: 0.85rem; color: var(--text-secondary);">{{ scenario.remediation }}</p>
+      <a href="{{ url_for('assessments.scenario_detail', scenario_id=scenario.scenario_id) }}" class="btn btn-secondary btn-sm" style="margin-top: 0.5rem;">Full Scenario Dossier</a>
+    {% else %}
+      <p style="color: var(--text-secondary);">Scenario metadata unavailable.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Sanitized Evidence Viewer -->
+<div class="card">
+  <h2>Sanitized Forensic Evidence</h2>
+  <p>Recorded HTTP interaction, evaluation criteria, and observed indicators (credentials, tokens, and cookies scrubbed).</p>
+
+  <div style="position: relative;">
+    <pre style="background: var(--bg-dark, #0d1117); color: #c9d1d9; padding: 1.25rem; border-radius: 6px; overflow-x: auto; font-family: monospace; font-size: 0.85rem; border: 1px solid var(--border-color); max-height: 500px;"><code>{{ result.evidence }}</code></pre>
+  </div>
+</div>
+{% endblock %}

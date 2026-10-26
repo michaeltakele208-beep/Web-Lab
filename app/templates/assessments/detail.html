@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment #{{ assessment.id }} - Web Lab{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <h1 style="margin: 0;">Assessment Run #{{ assessment.id }}</h1>
+      <span class="badge badge-{{ 'user' if assessment.status == 'completed' else ('analyst' if assessment.status == 'completed_with_errors' else ('admin' if assessment.status == 'failed' else 'secondary')) }}" style="font-size: 0.85rem;">
+        {{ assessment.status | upper }}
+      </span>
+    </div>
+    <p style="color: var(--text-secondary); margin-top: 0.25rem;">
+      UUID: <span class="code-pill" style="font-size: 0.8rem;">{{ assessment.uuid }}</span>
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem;">
+    {% if assessment.status in ['queued', 'running'] %}
+      <form method="POST" action="{{ url_for('assessments.cancel', assessment_id=assessment.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this assessment?');">Cancel Run</button>
+      </form>
+    {% endif %}
+    <a href="{{ url_for('reports.download_assessment_pdf', assessment_id=assessment.id) }}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); border: none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 2px;">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Download PDF Report
+    </a>
+    <a href="{{ url_for('reports.download_assessment_json', assessment_id=assessment.id) }}" class="btn btn-secondary btn-sm">
+      JSON
+    </a>
+    <a href="{{ url_for('assessments.index') }}" class="btn btn-secondary btn-sm">&larr; Assessment Console</a>
+  </div>
+</div>
+
+<!-- Metrics Cards Grid -->
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+  <div class="card" style="text-align: center; padding: 1.25rem;">
+    <span style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Total Tests</span>
+    <h2 style="font-size: 2.2rem; margin: 0.25rem 0 0 0;">{{ assessment.total_tests }}</h2>
+  </div>
+
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--danger-color);">
+    <span style="font-size: 0.85rem; color: var(--danger-color); text-transform: uppercase; font-weight: 600;">Confirmed Vulns</span>
+    <h2 style="font-size: 2.2rem; margin: 0.25rem 0 0 0; color: var(--danger-color);">{{ assessment.confirmed_vulnerabilities }}</h2>
+  </div>
+
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--success-color);">
+    <span style="font-size: 0.85rem; color: var(--success-color); text-transform: uppercase; font-weight: 600;">Passed Checks</span>
+    <h2 style="font-size: 2.2rem; margin: 0.25rem 0 0 0; color: var(--success-color);">{{ assessment.passed_checks }}</h2>
+  </div>
+
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--info-color, #3b82f6);">
+    <span style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Not Reproduced</span>
+    <h2 style="font-size: 2.2rem; margin: 0.25rem 0 0 0;">{{ assessment.not_reproduced }}</h2>
+  </div>
+
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--warning-color);">
+    <span style="font-size: 0.85rem; color: var(--warning-color); text-transform: uppercase; font-weight: 600;">Errors</span>
+    <h2 style="font-size: 2.2rem; margin: 0.25rem 0 0 0; color: {{ 'var(--warning-color)' if assessment.error_count > 0 else 'inherit' }};">{{ assessment.error_count }}</h2>
+  </div>
+</div>
+
+<!-- Assessment Metadata Details -->
+<div class="card" style="margin-bottom: 2rem;">
+  <h2>Target &amp; Execution Metadata</h2>
+  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div>
+      <p><strong>Target:</strong> {{ assessment.target.name if assessment.target else 'N/A' }} (<span class="code-pill">{{ assessment.target.base_url if assessment.target else 'N/A' }}</span>)</p>
+      <p><strong>Environment:</strong> <span class="code-pill">{{ assessment.target.environment_id if assessment.target else 'N/A' }}</span></p>
+      <p><strong>Target Edition:</strong> <span class="code-pill">{{ assessment.target_edition }}</span></p>
+    </div>
+    <div>
+      <p><strong>Initiated By:</strong> {{ assessment.initiator.display_name if assessment.initiator else 'N/A' }} ({{ assessment.initiator.email if assessment.initiator else 'N/A' }})</p>
+      <p><strong>Created:</strong> {{ assessment.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
+      <p>
+        <strong>Duration:</strong>
+        {% if assessment.duration_seconds is not none %}
+          {{ "%.2f"|format(assessment.duration_seconds) }}s
+        {% else %}
+          N/A
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if assessment.error_message %}
+    <div class="alert-box" style="margin-top: 1rem; border-color: var(--danger-color); color: var(--danger-color);">
+      <strong>Execution Error:</strong> {{ assessment.error_message }}
+    </div>
+  {% endif %}
+</div>
+
+<!-- Test Results Table -->
+<div class="card">
+  <h2>Individual Test Execution Results</h2>
+  <p>Detailed breakdown of each executed test case, observed outcome, and sanitized evidence.</p>
+
+  {% if assessment.results %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Test ID</th>
+            <th>Scenario</th>
+            <th>Edition</th>
+            <th>Outcome</th>
+            <th>Duration</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in assessment.results %}
+            <tr>
+              <td><span class="code-pill" style="font-size: 0.75rem;">{{ r.test_identifier }}</span></td>
+              <td>
+                <strong>{{ r.scenario_id }}</strong>
+              </td>
+              <td>
+                <span class="badge badge-{{ 'admin' if r.target_edition == 'vulnerable' else 'user' }}">
+                  {{ r.target_edition }}
+                </span>
+              </td>
+              <td>
+                {% if r.outcome == 'VULNERABILITY_CONFIRMED' %}
+                  <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);">
+                    VULNERABILITY CONFIRMED
+                  </span>
+                {% elif r.outcome == 'SECURITY_CHECK_PASSED' %}
+                  <span class="badge" style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);">
+                    SECURITY CHECK PASSED
+                  </span>
+                {% elif r.outcome == 'VULNERABILITY_NOT_REPRODUCED' %}
+                  <span class="badge badge-analyst">NOT REPRODUCED</span>
+                {% elif r.outcome == 'ERROR' %}
+                  <span class="badge badge-admin">ERROR: {{ r.error_category or 'FAULT' }}</span>
+                {% else %}
+                  <span class="badge">{{ r.outcome }}</span>
+                {% endif %}
+              </td>
+              <td>{{ r.duration_ms }} ms</td>
+              <td>
+                <a href="{{ url_for('assessments.result_detail', assessment_id=assessment.id, result_id=r.id) }}" class="btn btn-secondary btn-sm">Inspect Evidence</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-secondary);">No test results recorded for this assessment.</p>
+  {% endif %}
+</div>
+{% endblock %}

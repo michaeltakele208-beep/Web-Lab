@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Secure Headers - Web Lab Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase">
+    Scenario D &bull; Secure Edition (VADL-HEADERS-001)
+  </span>
+  <h1>Hardened Header Configuration</h1>
+  <p>This endpoint enforces Content-Security-Policy, nosniff, DENY, and Referrer-Policy.</p>
+</div>
+
+<div class="card">
+  <h2>Header Audit Demonstration</h2>
+  <p>Inspect the HTTP response headers in your browser developer tools or test suite.</p>
+  <ul>
+    <li><span class="status-indicator status-active"></span> <strong>Content-Security-Policy:</strong> default-src 'self'; frame-ancestors 'none'; object-src 'none'</li>
+    <li><span class="status-indicator status-active"></span> <strong>X-Content-Type-Options:</strong> nosniff (mitigates MIME confusion)</li>
+    <li><span class="status-indicator status-active"></span> <strong>X-Frame-Options:</strong> DENY (mitigates clickjacking)</li>
+    <li><span class="status-indicator status-active"></span> <strong>Referrer-Policy:</strong> strict-origin-when-cross-origin</li>
+  </ul>
+  <div style="margin-top: 1.5rem;">
+    <a href="{{ url_for('lab_vulnerable.headers_demo') }}" class="btn btn-sm btn-danger">Compare with Vulnerable Edition</a>
+  </div>
+</div>
+{% endblock %}

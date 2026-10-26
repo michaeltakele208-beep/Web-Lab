@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Server Error - Web Lab{% endblock %}
+
+{% block content %}
+<div class="error-container">
+  <h1>500</h1>
+  <h2>Internal Server Error</h2>
+  <p>{{ message or "An internal error occurred. Detailed error messages are suppressed to maintain laboratory security boundaries." }}</p>
+  <a href="{{ url_for('dashboard.index') }}" class="btn">Return to Lab Dashboard</a>
+</div>
+{% endblock %}

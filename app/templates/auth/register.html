@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Web Lab{% endblock %}
+
+{% block content %}
+<div class="form-card" style="max-width: 500px; margin: 2rem auto; background: #0b1329; border: 1px solid #1e293b; border-radius: 12px; padding: 2rem; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);">
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(6, 182, 212, 0.2)" stroke="#06b6d4" stroke-width="2"></path>
+      <path d="M9 12l2 2 4-4" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin: 0.5rem 0 0.2rem 0; letter-spacing: 0.04em;">Web Lab</h1>
+    <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">
+      Create an authorized participant account to access security modules.
+    </p>
+  </div>
+
+  <form action="{{ url_for('auth.register') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group" style="margin-bottom: 1.25rem;">
+      <label for="display_name" style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem; display: block;">Display Name</label>
+      <input
+        type="text"
+        id="display_name"
+        name="display_name"
+        class="form-control"
+        required
+        minlength="2"
+        maxlength="50"
+        value="{{ display_name or '' }}"
+        placeholder="e.g. Jane Doe"
+        style="background: #070d18; border-color: #334155; color: #ffffff; padding: 0.75rem 1rem;"
+      >
+      <div class="form-hint" style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem;">Must be 2 to 50 characters.</div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1.25rem;">
+      <label for="email" style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem; display: block;">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        class="form-control"
+        required
+        value="{{ email or '' }}"
+        placeholder="name@university.edu"
+        style="background: #070d18; border-color: #334155; color: #ffffff; padding: 0.75rem 1rem;"
+      >
+      <div class="form-hint" style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem;">Email will be normalized and used for authentication.</div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1.5rem;">
+      <label for="password" style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem; display: block;">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        class="form-control"
+        required
+        minlength="10"
+        autocomplete="new-password"
+        style="background: #070d18; border-color: #334155; color: #ffffff; padding: 0.75rem 1rem;"
+      >
+      <div class="form-hint" style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem;">
+        <strong>Laboratory Policy:</strong> Minimum 10 characters with at least one uppercase letter, one lowercase letter, one number, and one special symbol.
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; background: #2563eb; padding: 0.75rem; font-size: 0.95rem; font-weight: 600; border: none; border-radius: 6px;">
+      Register Account &rarr;
+    </button>
+  </form>
+
+  <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #64748b;">
+    Already registered? <a href="{{ url_for('auth.login') }}" style="color: #38bdf8; text-decoration: none;">Sign In Here</a>
+  </div>
+</div>
+{% endblock %}

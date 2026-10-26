@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Vulnerable Lab Edition - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+    Controlled Vulnerable Edition &bull; Local Development Only
+  </span>
+  <h1>Intentionally Vulnerable Lab Edition</h1>
+  <p>
+    This edition intentionally retains classic implementation flaws for training, empirical measurement,
+    and comparative security analysis. All scenarios use synthetic toy datasets.
+  </p>
+</div>
+
+<div class="alert-box" style="border-color: rgba(239, 68, 68, 0.4); background-color: rgba(239, 68, 68, 0.1); color: #fca5a5;">
+  <strong>Warning:</strong> These endpoints contain deliberately vulnerable code. They are completely disabled in
+  production configurations and must never be exposed to public networks.
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Scenario A: SQL Injection</h2>
+    <p>Unsafe string concatenation in toy catalog lookup.</p>
+    <a href="{{ url_for('lab_vulnerable.sqli_demo') }}" class="btn btn-sm btn-danger">Open Vulnerable Feature</a>
+  </div>
+
+  <div class="card">
+    <h2>Scenario B: Cross-Site Scripting (XSS)</h2>
+    <p>Unescaped user input rendered directly to the DOM.</p>
+    <a href="{{ url_for('lab_vulnerable.xss_demo') }}" class="btn btn-sm btn-danger">Open Vulnerable Feature</a>
+  </div>
+
+  <div class="card">
+    <h2>Scenario C: Broken Access Control (IDOR)</h2>
+    <p>Missing server-side ownership check on confidential records.</p>
+    <a href="{{ url_for('lab_vulnerable.record_demo', record_id=1) }}" class="btn btn-sm btn-danger">View Synthetic Record #1</a>
+  </div>
+
+  <div class="card">
+    <h2>Scenario D: Security Headers</h2>
+    <p>Incomplete HTTP response headers omitting CSP and clickjacking defense.</p>
+    <a href="{{ url_for('lab_vulnerable.headers_demo') }}" class="btn btn-sm btn-danger">Inspect Vulnerable Headers</a>
+  </div>
+</div>
+{% endblock %}

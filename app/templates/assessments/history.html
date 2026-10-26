@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment History - Web Lab{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="margin: 0;">Assessment Execution History</h1>
+    <p style="color: var(--text-secondary); margin-top: 0.25rem;">Complete audit log of all recorded offensive security testing assessments.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('assessments.index') }}" class="btn btn-secondary btn-sm">&larr; Assessment Console</a>
+  </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card" style="margin-bottom: 1.5rem; padding: 1rem 1.5rem;">
+  <form method="GET" action="{{ url_for('assessments.history') }}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px;">
+      <label for="status" class="form-label" style="font-size: 0.85rem;">Filter by Status</label>
+      <select name="status" id="status" class="form-input" style="padding: 0.4rem 0.75rem;">
+        <option value="">All Statuses</option>
+        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+        <option value="completed_with_errors" {% if status_filter == 'completed_with_errors' %}selected{% endif %}>Completed with Errors</option>
+        <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 200px;">
+      <label for="target_id" class="form-label" style="font-size: 0.85rem;">Filter by Target</label>
+      <select name="target_id" id="target_id" class="form-input" style="padding: 0.4rem 0.75rem;">
+        <option value="">All Targets</option>
+        {% for t in targets %}
+          <option value="{{ t.id }}" {% if target_id_filter == t.id %}selected{% endif %}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.5rem 1rem;">Apply Filters</button>
+      <a href="{{ url_for('assessments.history') }}" class="btn btn-sm" style="margin-left: 0.5rem;">Reset</a>
+    </div>
+  </form>
+</div>
+
+<!-- Assessments Table Card -->
+<div class="card">
+  {% if pagination.items %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Target</th>
+            <th>Edition</th>
+            <th>Status</th>
+            <th>Tests</th>
+            <th>Confirmed Vulns</th>
+            <th>Passed Checks</th>
+            <th>Errors</th>
+            <th>Initiator</th>
+            <th>Created</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in pagination.items %}
+            <tr>
+              <td><span class="code-pill">#{{ a.id }}</span></td>
+              <td><strong>{{ a.target.name if a.target else 'Target #' ~ a.target_id }}</strong></td>
+              <td><span class="code-pill" style="font-size: 0.75rem;">{{ a.target_edition }}</span></td>
+              <td>
+                <span class="badge badge-{{ 'user' if a.status == 'completed' else ('analyst' if a.status == 'completed_with_errors' else ('admin' if a.status == 'failed' else 'secondary')) }}">
+                  {{ a.status }}
+                </span>
+              </td>
+              <td>{{ a.total_tests }}</td>
+              <td>
+                {% if a.confirmed_vulnerabilities > 0 %}
+                  <span style="color: var(--danger-color); font-weight: 700;">{{ a.confirmed_vulnerabilities }}</span>
+                {% else %}
+                  0
+                {% endif %}
+              </td>
+              <td>
+                {% if a.passed_checks > 0 %}
+                  <span style="color: var(--success-color); font-weight: 700;">{{ a.passed_checks }}</span>
+                {% else %}
+                  0
+                {% endif %}
+              </td>
+              <td>
+                {% if a.error_count > 0 %}
+                  <span style="color: var(--warning-color); font-weight: 700;">{{ a.error_count }}</span>
+                {% else %}
+                  0
+                {% endif %}
+              </td>
+              <td>{{ a.initiator.display_name if a.initiator else 'N/A' }}</td>
+              <td><span style="font-size: 0.8rem; color: var(--text-secondary);">{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}</span></td>
+              <td>
+                <a href="{{ url_for('assessments.detail', assessment_id=a.id) }}" class="btn btn-secondary btn-sm">Inspect</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if pagination.pages > 1 %}
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <div>
+          <span style="font-size: 0.85rem; color: var(--text-secondary);">
+            Showing page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} total runs)
+          </span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          {% if pagination.has_prev %}
+            <a href="{{ url_for('assessments.history', page=pagination.prev_num, status=status_filter, target_id=target_id_filter) }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+          {% endif %}
+          {% if pagination.has_next %}
+            <a href="{{ url_for('assessments.history', page=pagination.next_num, status=status_filter, target_id=target_id_filter) }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 2rem 0;">No assessment runs match the specified filter criteria.</p>
+  {% endif %}
+</div>
+{% endblock %}

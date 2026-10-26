@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Vulnerable SQLi - Web Lab Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+    Scenario A &bull; Vulnerable Edition (VADL-SQLI-001)
+  </span>
+  <h1>Toy Catalog Search (SQL Injection)</h1>
+  <p>Search products by category. This endpoint concatenates user input directly into the SQL string.</p>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+  <h2>Product Category Lookup</h2>
+  <form method="GET" action="{{ url_for('lab_vulnerable.sqli_demo') }}" class="inline-form" style="gap: 1rem; width: 100%;">
+    <input
+      type="text"
+      name="category"
+      value="{{ category or '' }}"
+      placeholder="e.g. hardware or ' OR '1'='1"
+      class="form-control"
+      style="max-width: 400px;"
+    >
+    <button type="submit" class="btn btn-danger btn-sm">Search</button>
+  </form>
+  {% if executed_query %}
+    <div style="margin-top: 1rem; font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan); word-break: break-all;">
+      <strong>Executed Query:</strong> {{ executed_query }}
+    </div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-danger" style="margin-top: 1rem;">
+      <strong>Database Error:</strong> {{ error }}
+    </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Catalog Results ({{ products | length }})</h2>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Description</th>
+          <th>Test Flag?</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+          <tr>
+            <td><span class="code-pill">#{{ p.id }}</span></td>
+            <td><strong>{{ p.name }}</strong></td>
+            <td>{{ p.category }}</td>
+            <td>${{ "%.2f" | format(p.price) }}</td>
+            <td>{{ p.description }}</td>
+            <td>
+              {% if p.is_secret_test_flag %}
+                <span class="badge badge-admin">CONFIDENTIAL TEST FLAG</span>
+              {% else %}
+                <span class="badge badge-active">Standard</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-secondary);">No products found matching category.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Lab &amp; Target Management - Web Lab Admin{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+    Administration
+  </span>
+  <h1>Laboratory &amp; Target Management</h1>
+  <p>Manage vulnerability training scenarios, environment isolation status, and target authorization allowlists.</p>
+</div>
+
+<div class="alert-box">
+  <strong>Isolation &amp; Safety Notice:</strong>
+  Vulnerable mode is strictly restricted to development environments.
+  Target registration enforces an allowlist restricted to internal loopback and Docker subnets.
+  External website scanning is strictly prohibited.
+</div>
+
+<div class="grid" style="margin-bottom: 2rem;">
+  <div class="card">
+    <h2>Environment Isolation Status</h2>
+    <ul>
+      <li>
+        <strong>Vulnerable Lab Mode:</strong>
+        {% if vulnerable_lab_enabled %}
+          <span class="badge badge-admin">Active (Dev Sandbox)</span>
+        {% else %}
+          <span class="badge badge-disabled">Inactive (Hardened)</span>
+        {% endif %}
+      </li>
+      <li><strong>Production Safety:</strong> Startup automatically aborts if vulnerable mode is requested in production.</li>
+      <li><strong>Dataset Isolation:</strong> Scenarios operate exclusively on synthetic toy models.</li>
+    </ul>
+    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('lab_secure.index') }}" class="btn btn-sm">Explore Secure Edition</a>
+      {% if vulnerable_lab_enabled %}
+        <a href="{{ url_for('lab_vulnerable.index') }}" class="btn btn-sm btn-danger">Explore Vulnerable Edition</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Register Authorized Lab Target</h2>
+    <form action="{{ url_for('admin.register_target') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="name">Target Name</label>
+        <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Local Lab Sandbox">
+      </div>
+
+      <div class="form-group">
+        <label for="base_url">Target Base URL (Lab Hostnames Only)</label>
+        <input type="url" id="base_url" name="base_url" class="form-control" required placeholder="http://127.0.0.1:5000/lab">
+        <div class="form-hint">Must use approved lab hostnames (127.0.0.1, localhost, vadl-*). Never probes target during registration.</div>
+      </div>
+
+      <button type="submit" class="btn btn-sm">Authorize &amp; Register Target</button>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+  <h2>Authorized Laboratory Targets</h2>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Environment</th>
+          <th>Base URL</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in targets %}
+          <tr>
+            <td><span class="code-pill">#{{ t.id }}</span></td>
+            <td><strong>{{ t.name }}</strong></td>
+            <td>{{ t.target_type }}</td>
+            <td>{{ t.environment_id }}</td>
+            <td><span class="code-pill">{{ t.base_url }}</span></td>
+            <td>
+              {% if t.is_authorized %}
+                <span class="badge badge-active">Authorized</span>
+              {% else %}
+                <span class="badge badge-disabled">Revoked</span>
+              {% endif %}
+            </td>
+            <td>
+              <form action="{{ url_for('admin.toggle_target_authorization', target_id=t.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if t.is_authorized %}
+                  <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
+                {% else %}
+                  <button type="submit" class="btn btn-secondary btn-sm">Authorize</button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-secondary);">No lab targets registered yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Supported Vulnerability Scenario Registry</h2>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Scenario ID</th>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Severity</th>
+          <th>Assessment Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in scenarios %}
+          <tr>
+            <td><span class="code-pill">{{ s.scenario_id }}</span></td>
+            <td><strong>{{ s.title }}</strong></td>
+            <td>{{ s.category }}</td>
+            <td>
+              <span class="badge badge-{{ 'admin' if s.severity == 'HIGH' else ('analyst' if s.severity == 'MEDIUM' else 'user') }}">
+                {{ s.severity }}
+              </span>
+            </td>
+            <td><span class="badge badge-disabled">{{ s.status }}</span></td>
+            <td>
+              <a href="{{ url_for('assessments.scenario_detail', scenario_id=s.scenario_id) }}" class="btn btn-secondary btn-sm">View Technical Dossier</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

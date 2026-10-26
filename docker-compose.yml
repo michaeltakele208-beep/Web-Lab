@@ -1,0 +1,59 @@
+# ==============================================================================
+# Vulnerability Assessment and Defense Lab (VADL) - Docker Compose Configuration
+# Multi-container orchestration on isolated network boundary
+# ==============================================================================
+
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vadl-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - FLASK_CONFIG=development
+      - VADL_ENABLE_VULNERABLE_LAB=true
+      - SECRET_KEY=vadl-dev-secret-key-change-in-prod-32bytes
+      - DATABASE_URL=sqlite:////app/instance/vadl_dev.db
+    volumes:
+      - vadl-instance-data:/app/instance
+      - vadl-reports-data:/app/reports
+    networks:
+      - vadl-isolated-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Optional OWASP ZAP Baseline DAST Container
+  # Run via: docker compose run --rm zap
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: vadl-zap
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - vadl-isolated-network
+    volumes:
+      - ./reports/zap:/zap/wrk:rw
+    command: ["zap-baseline.py", "-t", "http://vadl-app:5000/", "-g", "gen.conf", "-r", "zap-report.html", "-J", "zap-report.json", "-I"]
+    profiles:
+      - scanning
+
+volumes:
+  vadl-instance-data:
+    driver: local
+  vadl-reports-data:
+    driver: local
+
+networks:
+  vadl-isolated-network:
+    name: vadl-isolated-network
+    driver: bridge

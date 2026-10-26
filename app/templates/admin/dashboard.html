@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+    Privileged Administrative Boundary
+  </span>
+  <h1>Laboratory Administration</h1>
+  <p>Manage participant identities, assign authorization roles, and audit access controls.</p>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Identity Metrics</h2>
+    <ul>
+      <li><strong>Total Registered Users:</strong> <span class="code-pill">{{ stats.total }}</span></li>
+      <li><strong>Active Accounts:</strong> <span class="badge badge-active">{{ stats.active }}</span></li>
+      <li><strong>Disabled Accounts:</strong> <span class="badge badge-disabled">{{ stats.disabled }}</span></li>
+      <li><strong>Security Analysts:</strong> <span class="badge badge-analyst">{{ stats.analysts }}</span></li>
+      <li><strong>Administrators:</strong> <span class="badge badge-admin">{{ stats.admins }}</span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Management Actions</h2>
+    <p>Administrative functions requiring verified elevated permissions.</p>
+    <ul>
+      <li>
+        <a href="{{ url_for('admin.list_users') }}" class="btn btn-sm">Manage Users &amp; Roles</a>
+      </li>
+      <li><strong>Console Access:</strong> Use server CLI (<span class="code-pill">flask user promote</span>) for out-of-band role assignments.</li>
+      <li><strong>Boundary Policy:</strong> Session actions are logged with sanitized identities.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

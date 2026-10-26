@@ -1,0 +1,52 @@
+# ==============================================================================
+# Vulnerability Assessment and Defense Lab (VADL) - Docker Compose Configuration
+# ==============================================================================
+# Security architecture notes:
+# 1. Loopback-only port mapping (127.0.0.1) prevents exposure to external interfaces.
+# 2. Container runs as non-root (UID 10001) with dropped Linux capabilities.
+# 3. Host socket mounts (/var/run/docker.sock) and privileged modes are strictly prohibited.
+# 4. An isolated internal bridge network is configured for multi-container lab isolation.
+# ==============================================================================
+
+services:
+  vadl-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vadl-core-app
+    restart: unless-stopped
+    ports:
+      # Bind strictly to localhost to prevent exposure across local area networks
+      - "127.0.0.1:5000:5000"
+    environment:
+      - FLASK_CONFIG=production
+      # In production, provide a cryptographically secure key via .env or orchestrator secret
+      - SECRET_KEY=${SECRET_KEY:-c3VwZXJzZWNyZXRwcm9kdWN0aW9ua2V5MzJjaGFycw==}
+      - DATABASE_URL=sqlite:////app/instance/vadl_prod.db
+      - LOG_LEVEL=INFO
+    volumes:
+      # Isolate database persistence to a named volume; no host source mounts permitted
+      - vadl-db-data:/app/instance
+    networks:
+      - vadl-isolated-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Memory and CPU constraints to mitigate denial-of-service in lab environments
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+
+networks:
+  vadl-isolated-network:
+    name: vadl-isolated-network
+    driver: bridge
+    # Future phase security testing containers and target editions attach here
+    internal: false
+
+volumes:
+  vadl-db-data:
+    name: vadl-db-data

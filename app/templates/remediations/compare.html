@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Comparative Verification Diff - Remediation #{{ remediation.id }} - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border-color: rgba(6, 182, 212, 0.3);">
+    Comparative Security Analysis
+  </span>
+  <h1>Before &amp; After Remediation Diff</h1>
+  <p>Remediation #{{ remediation.id }}: <strong>{{ remediation.title }}</strong> (Scenario: <code>{{ remediation.scenario_id }}</code>)</p>
+</div>
+
+<div style="margin-bottom: 1.5rem;">
+  <a href="{{ url_for('remediations.detail', remediation_id=remediation.id) }}" class="btn btn-secondary">
+    &larr; Back to Remediation Details
+  </a>
+</div>
+
+<!-- Integrity & Outcome Summary Banner -->
+<div class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--accent-green);">
+  <h2>Verification Integrity &amp; Outcome Summary</h2>
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem;">
+    <div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Remediation Status</span>
+      <div style="font-size: 1.25rem; font-weight: 700; color: var(--accent-green); margin-top: 0.25rem;">
+        {{ remediation.status }}
+      </div>
+    </div>
+    <div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Verification Outcome</span>
+      <div style="font-size: 1.25rem; font-weight: 700; color: var(--accent-cyan); margin-top: 0.25rem;">
+        {{ remediation.verification_status }}
+      </div>
+    </div>
+    <div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Evidence Digest (SHA-256)</span>
+      <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary); margin-top: 0.25rem; word-break: break-all;">
+        {{ remediation.evidence_sha256 or 'N/A' }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Side-by-Side Finding vs Verification -->
+{% if comparison.before.result_id and comparison.after.result_id %}
+  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Original Finding (Before) -->
+    <div class="card" style="border-top: 4px solid var(--accent-red);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; color: var(--accent-red);">BEFORE: Vulnerability Finding</h3>
+        <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red);">
+          {{ comparison.before.outcome }}
+        </span>
+      </div>
+
+      <table class="table" style="margin-bottom: 1rem; font-size: 0.85rem;">
+        <tr>
+          <td style="color: var(--text-secondary); width: 140px;">Finding Result ID:</td>
+          <td><strong>#{{ comparison.before.result_id }}</strong></td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-secondary);">Assessment Run:</td>
+          <td>#{{ comparison.before.assessment_id }}</td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-secondary);">Target Edition:</td>
+          <td><span class="badge" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red);">{{ comparison.before.edition }}</span></td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-secondary);">Recorded At:</td>
+          <td>{{ comparison.before.timestamp }}</td>
+        </tr>
+      </table>
+
+      <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Sanitized Exploitation Evidence</h4>
+      <pre style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 6px; font-size: 0.8rem; overflow-x: auto; max-height: 350px; white-space: pre-wrap;">{{ comparison.before.raw_evidence or 'No evidence logged.' }}</pre>
+    </div>
+
+    <!-- Verification Run (After) -->
+    <div class="card" style="border-top: 4px solid var(--accent-green);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; color: var(--accent-green);">AFTER: Defensive Verification</h3>
+        <span class="badge" style="background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green);">
+          {{ comparison.after.outcome }}
+        </span>
+      </div>
+
+      <table class="table" style="margin-bottom: 1rem; font-size: 0.85rem;">
+        <tr>
+          <td style="color: var(--text-secondary); width: 140px;">Verification Result ID:</td>
+          <td><strong>#{{ comparison.after.result_id }}</strong></td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-secondary);">Assessment Run:</td>
+          <td>#{{ comparison.after.assessment_id }}</td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-secondary);">Target Edition:</td>
+          <td><span class="badge" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-green);">{{ comparison.after.edition }}</span></td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-secondary);">Recorded At:</td>
+          <td>{{ comparison.after.timestamp }}</td>
+        </tr>
+      </table>
+
+      <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Sanitized Defensive Regression Evidence</h4>
+      <pre style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 6px; font-size: 0.8rem; overflow-x: auto; max-height: 350px; white-space: pre-wrap;">{{ comparison.after.raw_evidence or 'No evidence logged.' }}</pre>
+    </div>
+  </div>
+{% else %}
+  <div class="card">
+    <p style="color: var(--text-secondary);">
+      {% if not comparison.before.result_id %}
+        This remediation was registered without an originating finding.
+      {% elif not comparison.after.result_id %}
+        This remediation has not completed automated verification yet. Run verification on the <a href="{{ url_for('remediations.detail', remediation_id=remediation.id) }}">remediation management page</a>.
+      {% endif %}
+    </p>
+  </div>
+{% endif %}
+{% endblock %}

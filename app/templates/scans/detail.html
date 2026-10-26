@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Scan #{{ scan.id }} Details - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.3);">
+    Security Scan #{{ scan.id }} &mdash; {{ scan.scanner_type|upper }}
+  </span>
+  <h1>Scan Run Overview</h1>
+  <p>Scanner: <strong>{{ scan.scanner_type }}</strong> &mdash; Profile: <code>{{ scan.scan_profile }}</code> &mdash; UUID: <code>{{ scan.uuid }}</code></p>
+</div>
+
+<div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
+  <a href="{{ url_for('scans.index') }}" class="btn btn-secondary">
+    &larr; Back to Scanner Console
+  </a>
+  <a href="{{ url_for('reports.download_scan_pdf', scan_id=scan.id) }}" class="btn btn-primary" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); border: none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    Download PDF Report
+  </a>
+  {% if scan.raw_report_path %}
+    <a href="{{ url_for('scans.download_report', scan_id=scan.id) }}" class="btn btn-secondary">
+      Raw JSON Report
+    </a>
+  {% endif %}
+  <a href="{{ url_for('reports.compare', scan_a_id=scan.id) }}" class="btn btn-secondary">
+    Compare Scan &rarr;
+  </a>
+</div>
+
+{% if scan.error_message %}
+  <div class="alert alert-danger" style="margin-bottom: 2rem;">
+    <strong>Scan Execution Diagnostic Error:</strong>
+    <p style="margin: 0.25rem 0 0 0; font-family: var(--font-mono); font-size: 0.85rem;">{{ scan.error_message }}</p>
+  </div>
+{% endif %}
+
+<!-- Executive Security Posture Grade Card -->
+<div class="grade-meter-card" style="margin-bottom: 2rem;">
+  {% set score = scan.score if scan.score is not none else 100 %}
+  {% set grade = scan.grade or 'A' %}
+  {% if score >= 90 %}
+    {% set ring_color = "#10b981" %}
+    {% set badge_class = "grade-badge-a" %}
+  {% elif score >= 80 %}
+    {% set ring_color = "#3b82f6" %}
+    {% set badge_class = "grade-badge-b" %}
+  {% elif score >= 70 %}
+    {% set ring_color = "#f59e0b" %}
+    {% set badge_class = "grade-badge-c" %}
+  {% elif score >= 60 %}
+    {% set ring_color = "#f97316" %}
+    {% set badge_class = "grade-badge-d" %}
+  {% else %}
+    {% set ring_color = "#ef4444" %}
+    {% set badge_class = "grade-badge-f" %}
+  {% endif %}
+  {% set dashoffset = (339.29 * (1 - score / 100))|round(1) %}
+
+  <div class="grade-dial-wrapper">
+    <svg class="grade-dial-svg" viewBox="0 0 130 130">
+      <circle class="grade-dial-bg" cx="65" cy="65" r="54" />
+      <circle class="grade-dial-progress" cx="65" cy="65" r="54"
+              stroke="{{ ring_color }}"
+              stroke-dasharray="339.29"
+              stroke-dashoffset="{{ dashoffset }}" />
+    </svg>
+    <div class="grade-dial-center">
+      <span class="grade-letter-hero" style="color: {{ ring_color }};">{{ grade }}</span>
+      <span class="grade-score-sub">{{ score }}/100</span>
+    </div>
+  </div>
+
+  <div style="flex: 1;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <div>
+        <span class="grade-badge {{ badge_class }}" style="margin-bottom: 0.4rem;">GRADE {{ grade }} POSTURE</span>
+        <h2 style="margin: 0; font-size: 1.4rem; color: #fff;">
+          {{ scan.target_url or (scan.target.name if scan.target else scan.source_path or "Target Endpoint") }}
+        </h2>
+      </div>
+      <div style="text-align: right; font-size: 0.85rem; color: var(--text-secondary);">
+        Scan Mode: <strong style="color: var(--text-primary); text-transform: uppercase;">{{ scan.scan_mode or scan.scanner_type }}</strong><br>
+        Execution: <strong>{{ scan.duration_seconds ~ 's' if scan.duration_seconds is not none else 'Instant' }}</strong>
+      </div>
+    </div>
+
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+      {{ scan.breakdown_dict.get('summary', 'Security evaluation concluded with deterministic posture grading across configured transport, header, and application controls.') }}
+    </p>
+
+    <!-- Category Scores Breakdown -->
+    {% if scan.breakdown_dict.get('category_scores') %}
+      <div class="cat-progress-container">
+        {% for cat_name, cat_score in scan.breakdown_dict.get('category_scores', {}).items() %}
+          {% if cat_score >= 90 %}
+            {% set bar_col = "#10b981" %}
+          {% elif cat_score >= 75 %}
+            {% set bar_col = "#3b82f6" %}
+          {% elif cat_score >= 50 %}
+            {% set bar_col = "#f59e0b" %}
+          {% else %}
+            {% set bar_col = "#ef4444" %}
+          {% endif %}
+          <div class="cat-progress-row">
+            <span class="cat-name">{{ cat_name }}</span>
+            <div class="cat-bar-bg">
+              <div class="cat-bar-fill" style="width: {{ cat_score }}%; background: {{ bar_col }};"></div>
+            </div>
+            <span class="cat-score-text" style="color: {{ bar_col }};">{{ cat_score }}%</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Metrics Breakdown Cards -->
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+  <div class="card" style="text-align: center; padding: 1.25rem;">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--text-primary);">{{ scan.total_findings }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Total Findings</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid #dc2626;">
+    <div style="font-size: 2rem; font-weight: 700; color: #dc2626;">{{ scan.critical_count }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Critical</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--accent-red);">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-red);">{{ scan.high_count }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">High</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--accent-amber);">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-amber);">{{ scan.medium_count }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Medium</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--accent-cyan);">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-cyan);">{{ scan.low_count }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Low</div>
+  </div>
+</div>
+
+<!-- Scan Metadata Overview -->
+<div class="grid" style="grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Findings Table Card -->
+  <div class="card">
+    <h2>Reported Normalized Findings ({{ findings|length }})</h2>
+    {% if findings %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Finding Title</th>
+              <th>Category / CWE</th>
+              <th>Target Component</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in findings %}
+              <tr>
+                <td>
+                  {% if f.severity == 'CRITICAL' %}
+                    <span class="badge" style="background-color: rgba(220, 38, 38, 0.2); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.4);">CRITICAL</span>
+                  {% elif f.severity == 'HIGH' %}
+                    <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4);">HIGH</span>
+                  {% elif f.severity == 'MEDIUM' %}
+                    <span class="badge" style="background-color: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4);">MEDIUM</span>
+                  {% elif f.severity == 'LOW' %}
+                    <span class="badge" style="background-color: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4);">LOW</span>
+                  {% else %}
+                    <span class="badge" style="background-color: rgba(100, 116, 139, 0.2); color: var(--text-secondary);">INFO</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" style="color: var(--text-primary); font-weight: 600; text-decoration: none;">
+                    {{ f.title }}
+                  </a>
+                  {% if f.is_lab_scenario %}
+                    <span class="badge" style="background-color: rgba(139, 92, 246, 0.15); color: var(--accent-purple); font-size: 0.65rem; margin-left: 0.25rem;">LAB TRAINING FLAW</span>
+                  {% endif %}
+                </td>
+                <td style="font-size: 0.85rem;">
+                  {{ f.cwe_id or f.category or 'N/A' }}
+                </td>
+                <td style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-secondary);">
+                  {{ f.target_component[:45] }}{% if f.target_component|length > 45 %}...{% endif %}
+                </td>
+                <td>
+                  <span class="badge" style="font-size: 0.75rem;">{{ f.status }}</span>
+                </td>
+                <td>
+                  <a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                    Inspect
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--text-secondary); margin-top: 1rem;">No normalized findings recorded for this scan.</p>
+    {% endif %}
+  </div>
+
+  <!-- Scan Execution Details Sidebar -->
+  <div>
+    <div class="card" style="margin-bottom: 1.5rem; font-size: 0.85rem;">
+      <h3>Execution Invariants</h3>
+      <ul style="list-style: none; padding: 0; margin: 0;">
+        <li style="padding: 0.4rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Status:</span>
+          <strong>{{ scan.status }}</strong>
+        </li>
+        <li style="padding: 0.4rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Tool Version:</span>
+          <span>{{ scan.tool_version or 'N/A' }}</span>
+        </li>
+        <li style="padding: 0.4rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Duration:</span>
+          <span>{{ scan.duration_seconds ~ ' seconds' if scan.duration_seconds is not none else 'N/A' }}</span>
+        </li>
+        <li style="padding: 0.4rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Initiator:</span>
+          <span>User #{{ scan.initiated_by_user_id or 'N/A' }}</span>
+        </li>
+        <li style="padding: 0.4rem 0; display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Executed At:</span>
+          <span>{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Audit Events Card -->
+    <div class="card" style="font-size: 0.85rem;">
+      <h3>Audit Trail</h3>
+      {% if scan.audit_events %}
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {% for ev in scan.audit_events %}
+            <li style="padding: 0.4rem 0; border-bottom: 1px solid var(--border-color);">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+                <code>{{ ev.event_type }}</code>
+                <span>{{ ev.timestamp.strftime('%H:%M:%S') }}</span>
+              </div>
+              <div style="font-size: 0.8rem; margin-top: 0.2rem;">{{ ev.details }}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p style="color: var(--text-secondary);">No audit events recorded.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

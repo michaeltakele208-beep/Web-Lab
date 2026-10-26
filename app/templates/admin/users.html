@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Web Lab Admin{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+    Administration
+  </span>
+  <h1>Participant Identity Management</h1>
+  <p>Enforce role-based access control, assign privileged capabilities, and manage account statuses.</p>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+  <h2>Registered Laboratory Users</h2>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Role Management</th>
+          <th>Status Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td><span class="code-pill">#{{ u.id }}</span></td>
+            <td><strong>{{ u.display_name }}</strong></td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span class="badge badge-{{ 'admin' if u.role == 'admin' else ('analyst' if u.role == 'security_analyst' else 'user') }}">
+                {{ u.role }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-{{ u.status }}">{{ u.status }}</span>
+            </td>
+            <td>
+              {% if u.id == current_user.id %}
+                <span class="form-hint">Current Admin (Self)</span>
+              {% else %}
+                <form action="{{ url_for('admin.update_user_role', user_id=u.id) }}" method="POST" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <select name="role" class="select-sm">
+                    {% for r in all_roles %}
+                      <option value="{{ r }}" {% if u.role == r %}selected{% endif %}>{{ r }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-secondary btn-sm">Update</button>
+                </form>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.id == current_user.id %}
+                <span class="form-hint">Protected</span>
+              {% else %}
+                <form action="{{ url_for('admin.update_user_status', user_id=u.id) }}" method="POST" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  {% if u.status == 'active' %}
+                    <input type="hidden" name="status" value="disabled">
+                    <button type="submit" class="btn btn-danger btn-sm">Disable</button>
+                  {% else %}
+                    <input type="hidden" name="status" value="active">
+                    <button type="submit" class="btn btn-secondary btn-sm">Activate</button>
+                  {% endif %}
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

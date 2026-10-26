@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Vulnerable Record - Web Lab Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+    Scenario C &bull; Vulnerable Edition (VADL-AC-001)
+  </span>
+  <h1>Confidential Record #{{ record.id }}</h1>
+  <p>Insecure Direct Object Reference (IDOR): No server-side ownership check is applied.</p>
+</div>
+
+<div class="card">
+  <h2>Record Details</h2>
+  <ul>
+    <li><strong>Record ID:</strong> <span class="code-pill">#{{ record.id }}</span></li>
+    <li><strong>Designated Owner:</strong> {{ record.owner_username }}</li>
+    <li><strong>Record Title:</strong> {{ record.title }}</li>
+    <li><strong>Confidential Content:</strong></li>
+  </ul>
+  <div style="background-color: #0b1120; border: 1px solid var(--border-color); padding: 1rem; border-radius: 6px; margin-top: 1rem; font-family: var(--font-mono); color: #fca5a5;">
+    {{ record.confidential_note }}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ scenario.scenario_id }} - Scenario Dossier - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(139, 92, 246, 0.15); color: var(--accent-purple); border-color: rgba(139, 92, 246, 0.3);">
+    Scenario Dossier &bull; {{ scenario.scenario_id }}
+  </span>
+  <h1>{{ scenario.title }}</h1>
+  <p>{{ scenario.description }}</p>
+</div>
+
+<div class="grid" style="margin-bottom: 2rem;">
+  <div class="card">
+    <h2>Vulnerability Profile</h2>
+    <ul>
+      <li><strong>Scenario ID:</strong> <span class="code-pill">{{ scenario.scenario_id }}</span></li>
+      <li><strong>Category:</strong> {{ scenario.category }}</li>
+      <li>
+        <strong>Severity:</strong>
+        <span class="badge badge-{{ 'admin' if scenario.severity == 'HIGH' else ('analyst' if scenario.severity == 'MEDIUM' else 'user') }}">
+          {{ scenario.severity }}
+        </span>
+      </li>
+      <li><strong>Severity Rationale:</strong> {{ scenario.severity_rationale }}</li>
+      <li><strong>Affected Feature:</strong> {{ scenario.affected_feature }}</li>
+      <li><strong>OWASP Reference:</strong> <span class="code-pill">{{ scenario.owasp_reference }}</span></li>
+      <li><strong>Automated Test:</strong> <span class="code-pill" style="font-size: 0.8rem;">{{ scenario.automated_test_id }}</span></li>
+      <li><strong>Assessment Status:</strong> <span class="badge badge-disabled">{{ scenario.status }}</span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Comparative Behavior</h2>
+    <div style="margin-bottom: 1rem;">
+      <strong style="color: var(--accent-red);">Vulnerable Edition Behavior:</strong>
+      <p style="font-size: 0.9rem; margin-top: 0.25rem;">{{ scenario.vulnerable_behavior }}</p>
+    </div>
+    <div>
+      <strong style="color: var(--accent-green);">Secure Edition Behavior:</strong>
+      <p style="font-size: 0.9rem; margin-top: 0.25rem;">{{ scenario.secure_behavior }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+  <h2>Local Reproduction Instructions</h2>
+  <ol style="margin-left: 1.5rem; color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem;">
+    {% for step in scenario.reproduction_steps %}
+      <li style="padding: 0.25rem 0;">{{ step }}</li>
+    {% endfor %}
+  </ol>
+</div>
+
+<div class="card">
+  <h2>Defensive Remediation Guidance</h2>
+  <p style="color: #34d399; font-size: 0.95rem;">{{ scenario.remediation }}</p>
+  <div style="margin-top: 1.5rem;">
+    <a href="{{ url_for('assessments.index') }}" class="btn btn-secondary btn-sm">Return to Assessments Console</a>
+  </div>
+</div>
+{% endblock %}

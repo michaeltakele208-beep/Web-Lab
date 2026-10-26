@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Remediation #{{ remediation.id }} - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3);">
+    Remediation #{{ remediation.id }}
+  </span>
+  <h1>{{ remediation.title }}</h1>
+  <p>Scenario: <code>{{ remediation.scenario_id }}</code> &mdash; {{ scenario.title if scenario else 'Unknown Scenario' }}</p>
+</div>
+
+<!-- Overview Grid -->
+<div class="grid" style="grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <div>
+    <!-- Remediation Description & Details Card -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h2>Remediation Plan &amp; Fix Specification</h2>
+      {% if remediation.description %}
+        <div style="margin-bottom: 1rem;">
+          <h4 style="color: var(--text-secondary); margin-bottom: 0.25rem;">Problem Description</h4>
+          <p style="white-space: pre-wrap; margin: 0;">{{ remediation.description }}</p>
+        </div>
+      {% endif %}
+
+      {% if remediation.remediation_details %}
+        <div style="margin-bottom: 1rem;">
+          <h4 style="color: var(--text-secondary); margin-bottom: 0.25rem;">Defensive Implementation Notes</h4>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap;">{{ remediation.remediation_details }}</div>
+        </div>
+      {% endif %}
+
+      <!-- Associated Finding Link -->
+      {% if remediation.finding_result_id %}
+        <div style="background: rgba(30, 41, 59, 0.5); padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="color: var(--accent-amber);">Originating Finding:</strong>
+            <span style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 0.5rem;">Test Result #{{ remediation.finding_result_id }}</span>
+          </div>
+          {% if remediation.original_assessment_id %}
+            <a href="{{ url_for('assessments.detail', assessment_id=remediation.original_assessment_id) }}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
+              View Assessment #{{ remediation.original_assessment_id }}
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Defensive Verification Execution Card -->
+    <div class="card" style="border-left: 4px solid var(--accent-cyan); margin-bottom: 1.5rem;">
+      <h2>Automated Verification Engine</h2>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        Automated regression checks re-test the defensive implementation against an authorized secure edition. Manual transitions to <code>VERIFIED</code> are strictly prohibited.
+      </p>
+
+      {% if targets %}
+        <form method="POST" action="{{ url_for('remediations.verify', remediation_id=remediation.id) }}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div style="flex: 1; min-width: 250px;">
+            <label for="target_id" class="form-label">Authorized Lab Target</label>
+            <select name="target_id" id="target_id" class="form-input">
+              {% for t in targets %}
+                <option value="{{ t.id }}">{{ t.name }} ({{ t.base_url }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); border: none; padding: 0.65rem 1.25rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Execute Defensive Verification
+          </button>
+        </form>
+      {% else %}
+        <div class="alert alert-danger">No authorized lab targets available for verification.</div>
+      {% endif %}
+
+      <!-- Verification Outcome Display -->
+      {% if remediation.verification_status != 'UNVERIFIED' %}
+        <div style="margin-top: 1.5rem; padding: 1rem; border-radius: 6px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h3 style="margin: 0; font-size: 1.05rem;">Verification Outcome</h3>
+            {% if remediation.verification_status == 'VERIFIED' %}
+              <span class="badge" style="background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.5); font-size: 0.85rem; padding: 0.25rem 0.6rem;">
+                VERIFIED SECURE
+              </span>
+            {% elif remediation.verification_status == 'FAILED' %}
+              <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.5); font-size: 0.85rem; padding: 0.25rem 0.6rem;">
+                VERIFICATION FAILED
+              </span>
+            {% else %}
+              <span class="badge" style="background-color: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.5); font-size: 0.85rem; padding: 0.25rem 0.6rem;">
+                {{ remediation.verification_status }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+            Verified At: <strong style="color: var(--text-primary);">{{ remediation.verified_at.strftime('%Y-%m-%d %H:%M:%S UTC') if remediation.verified_at else 'N/A' }}</strong>
+            {% if remediation.verified_by_user_id %}
+              &mdash; Verified By: User #{{ remediation.verified_by_user_id }}
+            {% endif %}
+          </div>
+
+          {% if remediation.evidence_sha256 %}
+            <div style="margin-top: 0.75rem; background: rgba(0, 0, 0, 0.4); padding: 0.6rem 0.8rem; border-radius: 4px; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; margin-bottom: 0.25rem;">
+                SHA-256 Evidence Integrity Digest
+              </div>
+              <code style="word-break: break-all; color: var(--accent-cyan); font-size: 0.85rem;">{{ remediation.evidence_sha256 }}</code>
+            </div>
+          {% endif %}
+
+          {% if remediation.finding_result_id and remediation.verification_result_id %}
+            <div style="margin-top: 1rem;">
+              <a href="{{ url_for('remediations.compare', remediation_id=remediation.id) }}" class="btn btn-secondary btn-sm">
+                View Comparative Delta (Finding vs Verification) &rarr;
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Comparative Diff Summary Card -->
+    {% if comparison and comparison.before.result_id and comparison.after.result_id %}
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h2>Defensive Delta Summary</h2>
+        <div style="font-weight: 600; color: {% if comparison.remediation_confirmed %}var(--accent-green){% else %}var(--accent-amber){% endif %}; margin-bottom: 1rem;">
+          {{ comparison.delta_summary }}
+        </div>
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+          <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; padding: 1rem;">
+            <div style="font-weight: 600; color: var(--accent-red); margin-bottom: 0.5rem;">
+              Original Finding (#{{ comparison.before.result_id }})
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+              Edition: {{ comparison.before.edition }}
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+              Outcome: <strong style="color: var(--accent-red);">{{ comparison.before.outcome }}</strong>
+            </div>
+            <div style="font-size: 0.8rem; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; font-family: var(--font-mono); max-height: 120px; overflow-y: auto;">
+              {{ comparison.before.raw_evidence or 'No evidence logged.' }}
+            </div>
+          </div>
+
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 1rem;">
+            <div style="font-weight: 600; color: var(--accent-green); margin-bottom: 0.5rem;">
+              Verification Result (#{{ comparison.after.result_id }})
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+              Edition: {{ comparison.after.edition }}
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+              Outcome: <strong style="color: var(--accent-green);">{{ comparison.after.outcome }}</strong>
+            </div>
+            <div style="font-size: 0.8rem; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; font-family: var(--font-mono); max-height: 120px; overflow-y: auto;">
+              {{ comparison.after.raw_evidence or 'No evidence logged.' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar: Status & Audit Trail -->
+  <div>
+    <!-- Workflow Status Management Card -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h3>Workflow Status</h3>
+      <div style="margin: 0.75rem 0;">
+        {% if remediation.status == 'VERIFIED' %}
+          <span class="badge" style="background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.95rem; padding: 0.35rem 0.75rem;">
+            VERIFIED
+          </span>
+        {% elif remediation.status == 'READY_FOR_VERIFICATION' %}
+          <span class="badge" style="background-color: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); font-size: 0.95rem; padding: 0.35rem 0.75rem;">
+            READY FOR VERIFICATION
+          </span>
+        {% elif remediation.status == 'IN_PROGRESS' %}
+          <span class="badge" style="background-color: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.95rem; padding: 0.35rem 0.75rem;">
+            IN PROGRESS
+          </span>
+        {% elif remediation.status == 'REOPENED' %}
+          <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4); font-size: 0.95rem; padding: 0.35rem 0.75rem;">
+            REOPENED
+          </span>
+        {% else %}
+          <span class="badge" style="background-color: rgba(100, 116, 139, 0.2); color: var(--text-secondary); border: 1px solid rgba(100, 116, 139, 0.4); font-size: 0.95rem; padding: 0.35rem 0.75rem;">
+            OPEN
+          </span>
+        {% endif %}
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1rem 0;">
+
+      <!-- Status Change Form -->
+      <form method="POST" action="{{ url_for('remediations.update_status', remediation_id=remediation.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="status" class="form-label" style="font-size: 0.85rem;">Update Workflow Status</label>
+        <select name="status" id="status" class="form-input" style="margin-bottom: 0.75rem;">
+          <option value="OPEN" {% if remediation.status == 'OPEN' %}selected{% endif %}>OPEN</option>
+          <option value="IN_PROGRESS" {% if remediation.status == 'IN_PROGRESS' %}selected{% endif %}>IN_PROGRESS</option>
+          <option value="READY_FOR_VERIFICATION" {% if remediation.status == 'READY_FOR_VERIFICATION' %}selected{% endif %}>READY_FOR_VERIFICATION</option>
+          <option value="REOPENED" {% if remediation.status == 'REOPENED' %}selected{% endif %}>REOPENED</option>
+        </select>
+        <span class="form-hint" style="font-size: 0.75rem; margin-top: -0.5rem; margin-bottom: 0.75rem;">
+          Note: "VERIFIED" cannot be set manually. It requires executing an automated test run that passes all regression checks.
+        </span>
+
+        <label for="note" class="form-label" style="font-size: 0.85rem;">Audit Reason / Note</label>
+        <textarea name="note" id="note" class="form-input" rows="2" placeholder="Brief note explaining state change..." style="margin-bottom: 0.75rem;"></textarea>
+
+        <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">
+          Update Status
+        </button>
+      </form>
+    </div>
+
+    <!-- Metadata Card -->
+    <div class="card" style="margin-bottom: 1.5rem; font-size: 0.85rem;">
+      <h3>Metadata</h3>
+      <ul style="list-style: none; padding: 0; margin: 0;">
+        <li style="padding: 0.35rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Created At:</span>
+          <span>{{ remediation.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        </li>
+        <li style="padding: 0.35rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Updated At:</span>
+          <span>{{ remediation.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        </li>
+        <li style="padding: 0.35rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Created By:</span>
+          <span>User #{{ remediation.created_by_user_id }}</span>
+        </li>
+        <li style="padding: 0.35rem 0; display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Assigned To:</span>
+          <span>{{ 'User #' ~ remediation.assigned_user_id if remediation.assigned_user_id else 'Unassigned' }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Audit Trail Card -->
+<div class="card">
+  <h2>Remediation Audit Trail</h2>
+  <p style="font-size: 0.85rem; color: var(--text-secondary);">Tamper-evident audit trail capturing every state change, verification attempt, and analyst modification.</p>
+
+  {% if remediation.audit_events %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Event Type</th>
+            <th>Actor</th>
+            <th>Transition</th>
+            <th>Audit Log &amp; Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in remediation.audit_events|sort(attribute='timestamp', reverse=True) %}
+            <tr>
+              <td style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap;">
+                {{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+              </td>
+              <td><code>{{ event.event_type }}</code></td>
+              <td>User #{{ event.actor_id }}</td>
+              <td>
+                {% if event.old_status or event.new_status %}
+                  <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ event.old_status or 'None' }}</span>
+                  &rarr;
+                  <span style="font-size: 0.85rem; font-weight: 600;">{{ event.new_status or 'None' }}</span>
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </td>
+              <td style="font-size: 0.85rem;">{{ event.details or 'No additional details logged.' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-secondary); margin-top: 1rem;">No audit events recorded yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

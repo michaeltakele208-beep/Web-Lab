@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - Web Lab{% endblock %}
+
+{% block content %}
+<div class="form-card" style="max-width: 500px; margin: 2rem auto; background: #0b1329; border: 1px solid #1e293b; border-radius: 12px; padding: 2rem; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);">
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(6, 182, 212, 0.2)" stroke="#06b6d4" stroke-width="2"></path>
+      <path d="M9 12l2 2 4-4" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin: 0.5rem 0 0.2rem 0; letter-spacing: 0.04em;">Web Lab</h1>
+    <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">
+      Security Posture &amp; Vulnerability Assessment Platform
+    </p>
+  </div>
+
+  {% if next %}
+    <div class="alert alert-info" style="margin-bottom: 1.25rem; font-size: 0.85rem;">
+      <strong>Authentication Required:</strong> Accessing <code>{{ next }}</code> requires an active <strong>Security Analyst</strong> or <strong>Administrator</strong> session. Sign in below or click a test account to auto-fill.
+    </div>
+  {% endif %}
+
+  <form action="{{ url_for('auth.login') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if next %}
+      <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+
+    <div class="form-group" style="margin-bottom: 1.25rem;">
+      <label for="email" style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem; display: block;">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        class="form-control"
+        required
+        value="{{ email or '' }}"
+        placeholder="analyst@vadl.local"
+        autocomplete="email"
+        style="background: #070d18; border-color: #334155; color: #ffffff; padding: 0.75rem 1rem;"
+      >
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1.5rem;">
+      <label for="password" style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem; display: block;">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        class="form-control"
+        required
+        autocomplete="current-password"
+        style="background: #070d18; border-color: #334155; color: #ffffff; padding: 0.75rem 1rem;"
+      >
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; background: #2563eb; padding: 0.75rem; font-size: 0.95rem; font-weight: 600; border: none; border-radius: 6px;">
+      Sign In to Web Lab
+    </button>
+  </form>
+
+  <!-- Quick Demo Credentials Box -->
+  <div style="margin-top: 1.75rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 1.25rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+      <span style="font-size: 0.75rem; font-weight: 700; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.05em;">
+        Test Accounts (Click to Auto-Fill)
+      </span>
+      <span style="font-size: 0.7rem; color: #64748b;">One-Click</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <!-- Analyst Account -->
+      <div style="background: rgba(15, 23, 42, 0.7); padding: 0.75rem; border-radius: 6px; border: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <strong style="color: #c084fc; font-size: 0.85rem;">Security Analyst</strong>
+            <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-size: 0.65rem;">Recommended</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #64748b; display: block; margin: 0.2rem 0;">
+            Assessments &bull; Scanners &bull; Reports &bull; Remediations
+          </span>
+          <code style="font-size: 0.75rem; color: #38bdf8;">analyst@vadl.local</code>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('analyst@vadl.local', 'AnalystPassword123!@')" style="background: #1e293b; border-color: #334155;">
+          Fill Analyst
+        </button>
+      </div>
+
+      <!-- Administrator Account -->
+      <div style="background: rgba(15, 23, 42, 0.7); padding: 0.75rem; border-radius: 6px; border: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <strong style="color: #f87171; font-size: 0.85rem;">System Administrator</strong>
+            <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.65rem;">Admin</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #64748b; display: block; margin: 0.2rem 0;">
+            User Management &bull; Lab Target Registration
+          </span>
+          <code style="font-size: 0.75rem; color: #38bdf8;">admin@vadl.local</code>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('admin@vadl.local', 'AdminSecurePass123!@')" style="background: #1e293b; border-color: #334155;">
+          Fill Admin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #64748b;">
+    Need a new account? <a href="{{ url_for('auth.register') }}" style="color: #38bdf8; text-decoration: none;">Register Here</a>
+  </div>
+</div>
+
+<script>
+  function fillCreds(email, password) {
+    var emailField = document.getElementById('email');
+    var passwordField = document.getElementById('password');
+    if (emailField && passwordField) {
+      emailField.value = email;
+      passwordField.value = password;
+      emailField.style.borderColor = '#06b6d4';
+      passwordField.style.borderColor = '#06b6d4';
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+
+{% block title %}Security Scans - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.3);">
+    Automated Security Scanning &amp; Findings Normalization (Phase 6)
+  </span>
+  <h1>Automated Security Scanning Console</h1>
+  <p>Coordinate dynamic application testing (OWASP ZAP), Python static code analysis (Bandit), and dependency auditing (pip-audit) with normalized findings schema.</p>
+</div>
+
+<!-- Scanner Tool Availability Overview -->
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+  {% for tool in scanners %}
+    <div class="card" style="border-top: 3px solid {% if tool.is_available %}var(--accent-green){% else %}var(--accent-red){% endif %};">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+        <h3 style="margin: 0; text-transform: uppercase; font-size: 1.05rem;">
+          {% if tool.scanner_type == 'bandit' %}
+            Bandit SAST
+          {% elif tool.scanner_type == 'pip_audit' %}
+            pip-audit SCA
+          {% elif tool.scanner_type == 'zap' %}
+            OWASP ZAP DAST
+          {% else %}
+            {{ tool.scanner_type }}
+          {% endif %}
+        </h3>
+        {% if tool.is_available %}
+          <span class="badge" style="background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4);">
+            AVAILABLE
+          </span>
+        {% else %}
+          <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4);">
+            UNAVAILABLE
+          </span>
+        {% endif %}
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+        Version: <strong style="color: var(--text-primary);">{{ tool.version or 'Not Detected' }}</strong>
+      </div>
+      {% if tool.unavailable_reason %}
+        <div style="font-size: 0.8rem; color: var(--accent-amber); background: rgba(245, 158, 11, 0.1); padding: 0.4rem 0.6rem; border-radius: 4px;">
+          {{ tool.unavailable_reason }}
+        </div>
+      {% else %}
+        <div style="font-size: 0.8rem; color: var(--text-secondary);">
+          {% if tool.scanner_type == 'bandit' %}
+            Static Python abstract syntax tree security analysis.
+          {% elif tool.scanner_type == 'pip_audit' %}
+            Audits declared packages against PyPI / OSV vulnerability databases.
+          {% elif tool.scanner_type == 'zap' %}
+            Passive baseline dynamic scanning via isolated Docker container.
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Dual Mode Security Scanner Console -->
+<div class="scanner-console">
+  <div class="scanner-nav-tabs">
+    <button class="scanner-tab active" id="tab-btn-url" onclick="switchScanTab('url')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      Live Website URL Inspection
+    </button>
+    <button class="scanner-tab" id="tab-btn-zip" onclick="switchScanTab('zip')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+      </svg>
+      Source Code ZIP Audit
+    </button>
+    <button class="scanner-tab" id="tab-btn-tools" onclick="switchScanTab('tools')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+      Engine Tools (Bandit, pip-audit, ZAP)
+    </button>
+  </div>
+
+  <div class="scanner-body">
+    <!-- Panel 1: Live URL Inspection -->
+    <div id="panel-url">
+      <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.2rem; color: #fff;">
+        Live Security Posture &amp; Header Auditor
+      </h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Input any local loopback target (e.g. <code>http://127.0.0.1:5000</code>) or public web domain to audit TLS transport, security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options), cookie flags (HttpOnly, Secure, SameSite), and technology fingerprint leakage.
+      </p>
+
+      <form method="POST" action="{{ url_for('scans.scan_url') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="scanner-input-row">
+          <input type="text" name="target_url" id="target_url_input" class="scanner-text-input"
+                 placeholder="https://example.com or http://127.0.0.1:5000" required>
+          <button type="submit" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-weight: 600;">
+            Audit Website &rarr;
+          </button>
+        </div>
+      </form>
+
+      <div class="quick-scan-chips">
+        <span>Quick Test Presets:</span>
+        <button type="button" class="quick-chip-btn" onclick="fillUrl('http://127.0.0.1:5000')">
+          Test Local App (127.0.0.1:5000)
+        </button>
+        <button type="button" class="quick-chip-btn" onclick="fillUrl('https://example.com')">
+          https://example.com
+        </button>
+        <button type="button" class="quick-chip-btn" onclick="fillUrl('https://github.com')">
+          https://github.com
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel 2: Source Code ZIP Audit -->
+    <div id="panel-zip" style="display: none;">
+      <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.2rem; color: #fff;">
+        Source Code ZIP Archive Audit
+      </h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Upload a project <code>.zip</code> archive. The scanner safely extracts it with Zip-Slip path traversal defenses and executes Bandit SAST (code vulnerabilities) and pip-audit SCA (dependency CVEs), calculating a comprehensive 0–100 security score.
+      </p>
+
+      <form method="POST" action="{{ url_for('scans.scan_zip') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="drop-zone" onclick="document.getElementById('zip_file_input').click()">
+          <div class="drop-zone-icon">📦</div>
+          <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.25rem; color: #fff;">
+            Click to select or drag &amp; drop a .zip archive
+          </div>
+          <div id="zip-file-chosen" style="font-size: 0.85rem; color: var(--text-secondary);">
+            Maximum archive size: 25MB (Safety checked against Zip-Slip &amp; bombs)
+          </div>
+          <input type="file" name="file" id="zip_file_input" accept=".zip" style="display: none;" onchange="updateZipLabel(this)" required>
+        </div>
+        <div style="margin-top: 1.25rem; text-align: right;">
+          <button type="submit" class="btn btn-primary" style="padding: 0.8rem 1.75rem; font-weight: 600;">
+            Upload &amp; Audit Codebase &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Panel 3: Engine Tools -->
+    <div id="panel-tools" style="display: none;">
+      <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.2rem; color: #fff;">
+        Execute Automated Security Scan (Bandit, pip-audit, ZAP)
+      </h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+        Initiate controlled dynamic, static, or dependency vulnerability assessments against explicitly authorized targets.
+      </p>
+
+      <form method="POST" action="{{ url_for('scans.run_scan') }}" class="form-container" style="max-width: 100%;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.25rem;">
+          <div>
+            <label for="scanner_type" class="form-label">Select Security Scanner *</label>
+            <select name="scanner_type" id="scanner_type" class="form-input" required onchange="toggleScannerInputs()">
+              <option value="bandit" selected>Bandit &mdash; Python Static Code Analysis (SAST)</option>
+              <option value="pip_audit">pip-audit &mdash; Dependency Vulnerability Audit (SCA)</option>
+              <option value="zap">OWASP ZAP &mdash; Dynamic Web Vulnerability Scanner (DAST)</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="profile" class="form-label">Scan Profile</label>
+            <select name="profile" id="profile" class="form-input">
+              <option value="baseline" selected>Baseline (Passive / Standard Audit)</option>
+              <option value="passive">Passive Testing Only</option>
+              <option value="active">Active Scanning (DAST Only - Controlled Lab Target)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DAST Target Configuration (Visible for ZAP) -->
+        <div id="dast_config" style="display: none; background: rgba(15, 23, 42, 0.6); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 1.25rem;">
+          <h4 style="margin-top: 0; color: var(--accent-cyan); font-size: 0.95rem;">OWASP ZAP Target Configuration</h4>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <label for="target_id" class="form-label">Authorized Lab Target</label>
+              <select name="target_id" id="target_id" class="form-input">
+                {% for t in targets %}
+                  <option value="{{ t.id }}">{{ t.name }} ({{ t.base_url }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="target_edition" class="form-label">Target Edition</label>
+              <select name="target_edition" id="target_edition" class="form-input">
+                <option value="vulnerable" selected>Vulnerable Edition</option>
+                <option value="secure">Secure Edition</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SAST Source Path Configuration (Visible for Bandit) -->
+        <div id="sast_config" style="display: block; background: rgba(15, 23, 42, 0.6); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 1.25rem;">
+          <h4 style="margin-top: 0; color: var(--accent-cyan); font-size: 0.95rem;">Bandit Source Code Bounds</h4>
+          <div>
+            <label for="source_dir" class="form-label">Approved Source Directory</label>
+            <select name="source_dir" id="source_dir" class="form-input">
+              <option value="app" selected>app/ (Core Lab Application Codebase)</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          Launch Scanner Execution &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+            {% for t in targets %}
+              <option value="{{ t.id }}">{{ t.name }} ({{ t.base_url }})</option>
+            {% endfor %}
+          </select>
+          <span class="form-hint">Arbitrary URLs are strictly rejected; only authorized targets are allowed.</span>
+        </div>
+        <div>
+          <label for="target_edition" class="form-label">Target Edition</label>
+          <select name="target_edition" id="target_edition" class="form-input">
+            <option value="both" selected>Both Editions (/lab/*)</option>
+            <option value="vulnerable">Vulnerable Lab Edition Only (/lab/vulnerable/*)</option>
+            <option value="secure">Secure Reference Edition Only (/lab/secure/*)</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top: 0.75rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+          <input type="checkbox" name="allow_active_scan" id="allow_active_scan">
+          <span>Acknowledge active scan execution (Only applicable if 'Active' profile selected above)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- SAST Configuration (Visible for Bandit) -->
+    <div id="sast_config" style="margin-bottom: 1.25rem;">
+      <label for="source_dir" class="form-label">Source Code Target Directory</label>
+      <input type="text" name="source_dir" id="source_dir" class="form-input" value="app" readonly style="background: rgba(15, 23, 42, 0.5);">
+      <span class="form-hint">Static analysis is restricted to the internal application source tree ('app').</span>
+    </div>
+
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); border: none; padding: 0.65rem 1.25rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        Execute Security Scan
+      </button>
+      <a href="{{ url_for('scans.findings_list') }}" class="btn btn-secondary">
+        Browse All Normalized Findings &rarr;
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Scan Execution History Table -->
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+    <h2 style="margin: 0;">Scan Execution History</h2>
+    <span style="font-size: 0.85rem; color: var(--text-secondary);">Total Executions: {{ stats.total_scans }}</span>
+  </div>
+
+  {% if recent_scans %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Scan ID</th>
+            <th>Grade</th>
+            <th>Scanner</th>
+            <th>Target / Source</th>
+            <th>Status</th>
+            <th>Findings</th>
+            <th>Duration</th>
+            <th>Executed At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in recent_scans %}
+            <tr>
+              <td><strong>#{{ s.id }}</strong></td>
+              <td>
+                {% set g = s.grade or 'A' %}
+                {% set sc = s.score if s.score is not none else 100 %}
+                {% if sc >= 90 %}
+                  {% set g_class = 'grade-badge-a' %}
+                {% elif sc >= 80 %}
+                  {% set g_class = 'grade-badge-b' %}
+                {% elif sc >= 70 %}
+                  {% set g_class = 'grade-badge-c' %}
+                {% elif sc >= 60 %}
+                  {% set g_class = 'grade-badge-d' %}
+                {% else %}
+                  {% set g_class = 'grade-badge-f' %}
+                {% endif %}
+                <span class="grade-badge {{ g_class }}">
+                  {{ g }} <small style="margin-left: 3px; font-weight: normal; opacity: 0.85;">{{ sc }}</small>
+                </span>
+              </td>
+              <td><code>{{ s.scanner_type }}</code></td>
+              <td style="font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {% if s.target_url %}
+                  <span title="{{ s.target_url }}">{{ s.target_url }}</span>
+                {% elif s.scanner_type == 'zap' %}
+                  {{ s.target.name if s.target else 'Local Lab Target' }}
+                {% elif s.scanner_type == 'bandit' %}
+                  <code>app/</code>
+                {% else %}
+                  <code>{{ s.source_path or 'requirements.txt' }}</code>
+                {% endif %}
+              </td>
+              <td>
+                {% if s.status == 'COMPLETED_WITH_FINDINGS' %}
+                  <span class="badge" style="background-color: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4);">FINDINGS REPORTED</span>
+                {% elif s.status == 'COMPLETED' %}
+                  <span class="badge" style="background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4);">COMPLETED CLEAN</span>
+                {% elif s.status == 'TIMED_OUT' %}
+                  <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4);">TIMED OUT</span>
+                {% elif s.status == 'FAILED' %}
+                  <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4);">FAILED</span>
+                {% else %}
+                  <span class="badge">{{ s.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if s.total_findings > 0 %}
+                  <span style="color: var(--accent-amber); font-weight: 700;">{{ s.total_findings }}</span>
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">(H:{{ s.high_count }}, M:{{ s.medium_count }})</span>
+                {% else %}
+                  <span style="color: var(--text-secondary);">0</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                {{ s.duration_seconds ~ 's' if s.duration_seconds is not none else '&mdash;' }}
+              </td>
+              <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                {{ s.created_at.strftime('%Y-%m-%d %H:%M') }}
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.5rem;">
+                  <a href="{{ url_for('scans.detail', scan_id=s.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">
+                    Inspect
+                  </a>
+                  {% if s.raw_report_path %}
+                    <a href="{{ url_for('scans.download_report', scan_id=s.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;" title="Download Raw Report">
+                      JSON
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-secondary); margin-top: 1rem;">No automated scans executed yet.</p>
+  {% endif %}
+</div>
+
+<script>
+function switchScanTab(tab) {
+  document.getElementById("panel-url").style.display = tab === 'url' ? 'block' : 'none';
+  document.getElementById("panel-zip").style.display = tab === 'zip' ? 'block' : 'none';
+  document.getElementById("panel-tools").style.display = tab === 'tools' ? 'block' : 'none';
+
+  document.getElementById("tab-btn-url").classList.toggle('active', tab === 'url');
+  document.getElementById("tab-btn-zip").classList.toggle('active', tab === 'zip');
+  document.getElementById("tab-btn-tools").classList.toggle('active', tab === 'tools');
+}
+
+function fillUrl(url) {
+  document.getElementById("target_url_input").value = url;
+}
+
+function updateZipLabel(input) {
+  if (input.files && input.files.length > 0) {
+    document.getElementById("zip-file-chosen").innerHTML = "Selected Archive: <strong>" + input.files[0].name + "</strong> (" + Math.round(input.files[0].size / 1024) + " KB)";
+  }
+}
+
+function toggleScannerInputs() {
+  const scanner = document.getElementById("scanner_type").value;
+  const dastBox = document.getElementById("dast_config");
+  const sastBox = document.getElementById("sast_config");
+  if (scanner === "zap") {
+    dastBox.style.display = "block";
+    sastBox.style.display = "none";
+  } else if (scanner === "bandit") {
+    dastBox.style.display = "none";
+    sastBox.style.display = "block";
+  } else {
+    dastBox.style.display = "none";
+    sastBox.style.display = "none";
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Differential Comparison - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border-color: rgba(6, 182, 212, 0.3);">
+    Phase 7 &bull; Security Trend &amp; Differential Analysis
+  </span>
+  <h1>Scan Differential Comparison Console</h1>
+  <p>
+    Compare two security scans of the same authorized laboratory target to identify newly introduced vulnerabilities,
+    resolved issues, and persistent security risks over time.
+  </p>
+</div>
+
+<div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+  <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">
+    &larr; Reports Repository
+  </a>
+  <a href="{{ url_for('scans.index') }}" class="btn btn-secondary">
+    Security Scanners
+  </a>
+</div>
+
+{% if error_msg %}
+  <div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+    <strong>Comparison Error:</strong> {{ error_msg }}
+  </div>
+{% endif %}
+
+<!-- Selection Form Card -->
+<div class="card" style="margin-bottom: 2rem;">
+  <h2>Select Scans for Differential Analysis</h2>
+  <form method="POST" action="{{ url_for('reports.compare') }}" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1.25rem; align-items: flex-end;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group">
+      <label for="scan_a_id"><strong>Baseline Scan (Earlier Execution)</strong></label>
+      <select id="scan_a_id" name="scan_a_id" class="form-control" required>
+        <option value="">-- Choose Baseline Scan --</option>
+        {% for s in scans %}
+          <option value="{{ s.id }}" {% if scan_a_id == s.id %}selected{% endif %}>
+            Scan #{{ s.id }} &mdash; {{ s.scanner_type|upper }} [{{ s.scan_profile }}] &mdash; {{ s.created_at.strftime('%Y-%m-%d %H:%M') }} ({{ s.total_findings }} findings)
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="scan_b_id"><strong>Comparison Scan (Later Execution)</strong></label>
+      <select id="scan_b_id" name="scan_b_id" class="form-control" required>
+        <option value="">-- Choose Comparison Scan --</option>
+        {% for s in scans %}
+          <option value="{{ s.id }}" {% if scan_b_id == s.id %}selected{% endif %}>
+            Scan #{{ s.id }} &mdash; {{ s.scanner_type|upper }} [{{ s.scan_profile }}] &mdash; {{ s.created_at.strftime('%Y-%m-%d %H:%M') }} ({{ s.total_findings }} findings)
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.5rem;">
+        Compare Scans
+      </button>
+    </div>
+  </form>
+</div>
+
+{% if diff %}
+  <!-- Comparison Results Container -->
+  <div style="margin-bottom: 2rem;">
+    <!-- Overview & Export Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="margin: 0;">Differential Analysis: {{ diff.target_name }}</h2>
+        <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0; font-size: 0.85rem;">
+          Baseline: <strong>Scan #{{ diff.scan_a.id }}</strong> ({{ diff.scan_a.scanner_type|upper }}) &bull;
+          Comparison: <strong>Scan #{{ diff.scan_b.id }}</strong> ({{ diff.scan_b.scanner_type|upper }})
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <form method="POST" action="{{ url_for('reports.generate') }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="report_type" value="comparison">
+          <input type="hidden" name="scan_a_id" value="{{ diff.scan_a.id }}">
+          <input type="hidden" name="scan_b_id" value="{{ diff.scan_b.id }}">
+          <input type="hidden" name="file_format" value="pdf">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 2px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export Comparison PDF
+          </button>
+        </form>
+
+        <form method="POST" action="{{ url_for('reports.generate') }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="report_type" value="comparison">
+          <input type="hidden" name="scan_a_id" value="{{ diff.scan_a.id }}">
+          <input type="hidden" name="scan_b_id" value="{{ diff.scan_b.id }}">
+          <input type="hidden" name="file_format" value="json">
+          <button type="submit" class="btn btn-secondary btn-sm">
+            Export JSON
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+      <div class="card" style="text-align: center; border-top: 3px solid #dc2626; padding: 1.25rem;">
+        <div style="font-size: 2.25rem; font-weight: 700; color: #dc2626;">{{ diff.counts.new }}</div>
+        <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Newly Detected</div>
+      </div>
+      <div class="card" style="text-align: center; border-top: 3px solid #16a34a; padding: 1.25rem;">
+        <div style="font-size: 2.25rem; font-weight: 700; color: #16a34a;">{{ diff.counts.resolved }}</div>
+        <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Resolved / Absent</div>
+      </div>
+      <div class="card" style="text-align: center; border-top: 3px solid #f59e0b; padding: 1.25rem;">
+        <div style="font-size: 2.25rem; font-weight: 700; color: #f59e0b;">{{ diff.counts.persistent }}</div>
+        <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Persistent Findings</div>
+      </div>
+      <div class="card" style="text-align: center; border-top: 3px solid #06b6d4; padding: 1.25rem;">
+        <div style="font-size: 2.25rem; font-weight: 700; color: #06b6d4;">{{ diff.counts.severity_changes }}</div>
+        <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Severity Changes</div>
+      </div>
+    </div>
+
+    <!-- Caveats Box -->
+    {% if diff.caveats %}
+      <div class="alert alert-warning" style="margin-bottom: 2rem; background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--accent-amber);">
+        <strong style="color: var(--accent-amber);">Analytical Caveats &amp; Coverage Limitations:</strong>
+        <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0; font-size: 0.85rem;">
+          {% for cav in diff.caveats %}
+            <li style="margin-bottom: 0.25rem;">{{ cav }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- Categorized Findings Tables -->
+    <div class="grid" style="grid-template-columns: 1fr; gap: 2rem;">
+      <!-- Newly Detected Findings -->
+      <div class="card">
+        <h3>Newly Detected Findings ({{ diff.new_findings|length }})</h3>
+        {% if diff.new_findings %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Severity</th>
+                  <th>Title</th>
+                  <th>CWE / Vulnerability ID</th>
+                  <th>Component</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in diff.new_findings %}
+                  <tr>
+                    <td><span class="badge badge-danger">{{ f.severity }}</span></td>
+                    <td><strong>{{ f.title }}</strong></td>
+                    <td>{{ f.cwe_id or f.vulnerability_identifier or 'N/A' }}</td>
+                    <td style="font-family: var(--font-mono); font-size: 0.8rem;">{{ f.target_component or 'N/A' }}</td>
+                    <td><a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" class="btn btn-secondary btn-sm">Inspect</a></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p style="color: var(--text-secondary); font-size: 0.85rem;">No new vulnerability findings introduced in the comparison scan.</p>
+        {% endif %}
+      </div>
+
+      <!-- Resolved Findings -->
+      <div class="card">
+        <h3>Resolved / No Longer Detected Findings ({{ diff.resolved_findings|length }})</h3>
+        {% if diff.resolved_findings %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Original Severity</th>
+                  <th>Title</th>
+                  <th>CWE / Vulnerability ID</th>
+                  <th>Component</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in diff.resolved_findings %}
+                  <tr>
+                    <td><span class="badge" style="background: rgba(100, 116, 139, 0.2); color: var(--text-secondary);">{{ f.severity }}</span></td>
+                    <td>{{ f.title }}</td>
+                    <td>{{ f.cwe_id or f.vulnerability_identifier or 'N/A' }}</td>
+                    <td style="font-family: var(--font-mono); font-size: 0.8rem;">{{ f.target_component or 'N/A' }}</td>
+                    <td><a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" class="btn btn-secondary btn-sm">Inspect</a></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p style="color: var(--text-secondary); font-size: 0.85rem;">No findings from the baseline were resolved or absent in the comparison scan.</p>
+        {% endif %}
+      </div>
+
+      <!-- Persistent Findings -->
+      <div class="card">
+        <h3>Persistent Findings ({{ diff.persistent_findings|length }})</h3>
+        {% if diff.persistent_findings %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Severity</th>
+                  <th>Title</th>
+                  <th>CWE / Vulnerability ID</th>
+                  <th>Component</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in diff.persistent_findings %}
+                  <tr>
+                    <td><span class="badge" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-amber);">{{ f.severity }}</span></td>
+                    <td>{{ f.title }}</td>
+                    <td>{{ f.cwe_id or f.vulnerability_identifier or 'N/A' }}</td>
+                    <td style="font-family: var(--font-mono); font-size: 0.8rem;">{{ f.target_component or 'N/A' }}</td>
+                    <td><a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" class="btn btn-secondary btn-sm">Inspect</a></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p style="color: var(--text-secondary); font-size: 0.85rem;">No persistent findings shared across both executions.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

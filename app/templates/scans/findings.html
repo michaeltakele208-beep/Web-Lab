@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Consolidated Security Findings - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.3);">
+    Common Finding Schema Repository
+  </span>
+  <h1>Consolidated Security Findings</h1>
+  <p>Normalized vulnerability findings cataloged across OWASP ZAP (DAST), Bandit (SAST), and pip-audit (SCA).</p>
+</div>
+
+<!-- Filters Card -->
+<div class="card" style="margin-bottom: 2rem;">
+  <form method="GET" action="{{ url_for('scans.findings_list') }}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 150px;">
+      <label for="severity" class="form-label" style="font-size: 0.85rem;">Severity</label>
+      <select name="severity" id="severity" class="form-input">
+        <option value="">All Severities</option>
+        <option value="CRITICAL" {% if severity_filter == 'CRITICAL' %}selected{% endif %}>Critical</option>
+        <option value="HIGH" {% if severity_filter == 'HIGH' %}selected{% endif %}>High</option>
+        <option value="MEDIUM" {% if severity_filter == 'MEDIUM' %}selected{% endif %}>Medium</option>
+        <option value="LOW" {% if severity_filter == 'LOW' %}selected{% endif %}>Low</option>
+        <option value="INFORMATIONAL" {% if severity_filter == 'INFORMATIONAL' %}selected{% endif %}>Informational</option>
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 150px;">
+      <label for="scanner" class="form-label" style="font-size: 0.85rem;">Scanner Tool</label>
+      <select name="scanner" id="scanner" class="form-input">
+        <option value="">All Scanners</option>
+        <option value="bandit" {% if scanner_filter == 'bandit' %}selected{% endif %}>Bandit SAST</option>
+        <option value="pip_audit" {% if scanner_filter == 'pip_audit' %}selected{% endif %}>pip-audit SCA</option>
+        <option value="zap" {% if scanner_filter == 'zap' %}selected{% endif %}>OWASP ZAP DAST</option>
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 150px;">
+      <label for="status" class="form-label" style="font-size: 0.85rem;">Status</label>
+      <select name="status" id="status" class="form-input">
+        <option value="">All Statuses</option>
+        <option value="NEW" {% if status_filter == 'NEW' %}selected{% endif %}>New</option>
+        <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
+        <option value="RESOLVED" {% if status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+        <option value="FALSE_POSITIVE" {% if status_filter == 'FALSE_POSITIVE' %}selected{% endif %}>False Positive</option>
+      </select>
+    </div>
+
+    <div style="flex: 2; min-width: 220px;">
+      <label for="q" class="form-label" style="font-size: 0.85rem;">Search Keyword</label>
+      <input type="text" name="q" id="q" class="form-input" placeholder="Title, description, or component..." value="{{ query_str }}">
+    </div>
+
+    <div style="display: flex; gap: 0.5rem;">
+      <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1rem;">
+        Filter
+      </button>
+      <a href="{{ url_for('scans.findings_list') }}" class="btn btn-secondary" style="padding: 0.6rem 1rem;">
+        Reset
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Findings List Card -->
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2 style="margin: 0;">Cataloged Findings ({{ findings|length }})</h2>
+    <a href="{{ url_for('scans.index') }}" class="btn btn-secondary btn-sm">
+      &larr; Back to Scanner Console
+    </a>
+  </div>
+
+  {% if findings %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Tool</th>
+            <th>Title &amp; Classification</th>
+            <th>Target / File / Package</th>
+            <th>Status</th>
+            <th>First Seen</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in findings %}
+            <tr>
+              <td>
+                {% if f.severity == 'CRITICAL' %}
+                  <span class="badge" style="background-color: rgba(220, 38, 38, 0.2); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.4);">CRITICAL</span>
+                {% elif f.severity == 'HIGH' %}
+                  <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4);">HIGH</span>
+                {% elif f.severity == 'MEDIUM' %}
+                  <span class="badge" style="background-color: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4);">MEDIUM</span>
+                {% elif f.severity == 'LOW' %}
+                  <span class="badge" style="background-color: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4);">LOW</span>
+                {% else %}
+                  <span class="badge" style="background-color: rgba(100, 116, 139, 0.2); color: var(--text-secondary);">INFO</span>
+                {% endif %}
+              </td>
+              <td><code>{{ f.scanner_name }}</code></td>
+              <td>
+                <a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" style="color: var(--text-primary); font-weight: 600; text-decoration: none;">
+                  {{ f.title }}
+                </a>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                  ID: <code>{{ f.tool_finding_id }}</code> &mdash; {{ f.cwe_id or f.category or 'N/A' }}
+                  {% if f.is_lab_scenario %}
+                    <span class="badge" style="background-color: rgba(139, 92, 246, 0.15); color: var(--accent-purple); font-size: 0.65rem; margin-left: 0.25rem;">LAB FLAW</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-secondary);">
+                {{ f.target_component[:40] }}{% if f.target_component|length > 40 %}...{% endif %}
+                {% if f.line_number %}
+                  <span style="color: var(--accent-cyan);">:L{{ f.line_number }}</span>
+                {% endif %}
+              </td>
+              <td><span class="badge" style="font-size: 0.75rem;">{{ f.status }}</span></td>
+              <td style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap;">
+                {{ f.first_seen_at.strftime('%Y-%m-%d') }}
+              </td>
+              <td>
+                <a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                  Inspect
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-secondary); margin-top: 1rem;">No normalized findings match the selected criteria.</p>
+  {% endif %}
+</div>
+{% endblock %}

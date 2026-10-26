@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Remediations &amp; Defensive Verification - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3);">
+    Defensive Verification Engine (Phase 5)
+  </span>
+  <h1>Remediation &amp; Defense Verification</h1>
+  <p>Track remediation workflows, execute automated defensive regression tests against secure targets, and preserve cryptographically hashed verification evidence.</p>
+</div>
+
+<!-- Stats Overview Cards -->
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+  <div class="card" style="text-align: center; padding: 1.25rem;">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--text-primary);">{{ stats.total }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem;">Total Tracked</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--accent-amber);">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-amber);">{{ stats.open }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem;">Open / In Progress</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--accent-cyan);">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-cyan);">{{ stats.ready }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem;">Ready to Verify</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--accent-green);">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-green);">{{ stats.verified }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem;">Verified Secure</div>
+  </div>
+  <div class="card" style="text-align: center; padding: 1.25rem; border-top: 3px solid var(--accent-red);">
+    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-red);">{{ stats.reopened }}</div>
+    <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem;">Reopened</div>
+  </div>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <!-- Filter tabs -->
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <a href="{{ url_for('remediations.index') }}" class="btn {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">All</a>
+    <a href="{{ url_for('remediations.index', status='OPEN') }}" class="btn {% if status_filter == 'OPEN' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Open</a>
+    <a href="{{ url_for('remediations.index', status='IN_PROGRESS') }}" class="btn {% if status_filter == 'IN_PROGRESS' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">In Progress</a>
+    <a href="{{ url_for('remediations.index', status='READY_FOR_VERIFICATION') }}" class="btn {% if status_filter == 'READY_FOR_VERIFICATION' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Ready for Verification</a>
+    <a href="{{ url_for('remediations.index', status='VERIFIED') }}" class="btn {% if status_filter == 'VERIFIED' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Verified</a>
+    <a href="{{ url_for('remediations.index', status='REOPENED') }}" class="btn {% if status_filter == 'REOPENED' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Reopened</a>
+  </div>
+
+  <a href="{{ url_for('remediations.new_remediation') }}" class="btn btn-primary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+    New Remediation Track
+  </a>
+</div>
+
+<!-- Remediation Workflows Table -->
+<div class="card" style="margin-bottom: 2rem;">
+  <h2>Tracked Remediations</h2>
+  {% if remediations %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Scenario</th>
+            <th>Title</th>
+            <th>Workflow Status</th>
+            <th>Verification</th>
+            <th>Evidence Hash</th>
+            <th>Updated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in remediations %}
+            <tr>
+              <td><strong>#{{ r.id }}</strong></td>
+              <td><code>{{ r.scenario_id }}</code></td>
+              <td>
+                <a href="{{ url_for('remediations.detail', remediation_id=r.id) }}" style="color: var(--text-primary); font-weight: 600; text-decoration: none;">
+                  {{ r.title }}
+                </a>
+              </td>
+              <td>
+                {% if r.status == 'VERIFIED' %}
+                  <span class="badge" style="background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4);">VERIFIED</span>
+                {% elif r.status == 'READY_FOR_VERIFICATION' %}
+                  <span class="badge" style="background-color: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4);">READY</span>
+                {% elif r.status == 'IN_PROGRESS' %}
+                  <span class="badge" style="background-color: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4);">IN PROGRESS</span>
+                {% elif r.status == 'REOPENED' %}
+                  <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4);">REOPENED</span>
+                {% else %}
+                  <span class="badge" style="background-color: rgba(100, 116, 139, 0.2); color: var(--text-secondary); border: 1px solid rgba(100, 116, 139, 0.4);">OPEN</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.verification_status == 'VERIFIED' %}
+                  <span style="color: var(--accent-green); font-weight: 600;">PASS</span>
+                {% elif r.verification_status == 'FAILED' %}
+                  <span style="color: var(--accent-red); font-weight: 600;">FAIL</span>
+                {% elif r.verification_status == 'ERROR' %}
+                  <span style="color: var(--accent-red); font-weight: 600;">ERROR</span>
+                {% else %}
+                  <span style="color: var(--text-secondary);">UNVERIFIED</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.evidence_sha256 %}
+                  <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);" title="{{ r.evidence_sha256 }}">
+                    {{ r.evidence_sha256[:10] }}...{{ r.evidence_sha256[-6:] }}
+                  </span>
+                {% else %}
+                  <span style="color: var(--text-secondary); font-size: 0.8rem;">&mdash;</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                {{ r.updated_at.strftime('%Y-%m-%d %H:%M') }}
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.5rem;">
+                  <a href="{{ url_for('remediations.detail', remediation_id=r.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">
+                    Manage
+                  </a>
+                  {% if r.finding_result_id and r.verification_result_id %}
+                    <a href="{{ url_for('remediations.compare', remediation_id=r.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;" title="Compare Before/After">
+                      Diff
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-secondary); margin-top: 1rem;">No remediations matching current criteria.</p>
+  {% endif %}
+</div>
+
+<!-- Unremediated Confirmed Findings Section -->
+<div class="card" style="border-left: 4px solid var(--accent-amber);">
+  <h2>Eligible Confirmed Findings Awaiting Remediation</h2>
+  <p>Vulnerability findings detected during offensive assessments that do not yet have an active remediation tracking record.</p>
+
+  {% if eligible_findings %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Finding ID</th>
+            <th>Scenario</th>
+            <th>Edition Tested</th>
+            <th>Assessment ID</th>
+            <th>Timestamp</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in eligible_findings %}
+            <tr>
+              <td><strong>#{{ f.id }}</strong></td>
+              <td><code>{{ f.scenario_id }}</code></td>
+              <td><span class="badge" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red);">{{ f.target_edition }}</span></td>
+              <td><a href="{{ url_for('assessments.detail', assessment_id=f.assessment_id) }}" style="color: var(--accent-cyan);">Run #{{ f.assessment_id }}</a></td>
+              <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ f.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>
+                <a href="{{ url_for('remediations.new_remediation', finding_id=f.id) }}" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">
+                  Start Remediation
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-secondary); margin-top: 1rem;">No unlinked vulnerability findings found. All confirmed findings are currently tracked or none have been detected yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

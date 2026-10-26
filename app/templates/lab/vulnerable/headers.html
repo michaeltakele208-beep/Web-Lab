@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Vulnerable Headers - Web Lab Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);">
+    Scenario D &bull; Vulnerable Edition (VADL-HEADERS-001)
+  </span>
+  <h1>Insecure Header Configuration</h1>
+  <p>This endpoint deliberately omits modern defense headers (CSP, nosniff, frame restrictions).</p>
+</div>
+
+<div class="card">
+  <h2>Header Audit Demonstration</h2>
+  <p>Inspect the HTTP response headers in your browser developer tools or test suite.</p>
+  <ul>
+    <li><span class="status-indicator status-danger"></span> <strong>Content-Security-Policy:</strong> Missing (permits unrestricted resource loading)</li>
+    <li><span class="status-indicator status-danger"></span> <strong>X-Content-Type-Options:</strong> Missing (permits MIME sniffing)</li>
+    <li><span class="status-indicator status-danger"></span> <strong>X-Frame-Options:</strong> Missing (permits framing / clickjacking)</li>
+    <li><span class="status-indicator status-danger"></span> <strong>Referrer-Policy:</strong> Permissive default</li>
+  </ul>
+  <div style="margin-top: 1.5rem;">
+    <a href="{{ url_for('lab_secure.headers_demo') }}" class="btn btn-sm">Compare with Secure Edition</a>
+  </div>
+</div>
+{% endblock %}

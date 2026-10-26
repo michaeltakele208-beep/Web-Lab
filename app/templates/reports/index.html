@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Security Reports Repository - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.3);">
+    Phase 7 &bull; Security Reporting &amp; Audit Artifacts
+  </span>
+  <h1>Security Assessment Reports Repository</h1>
+  <p>
+    Generate, review, and download official laboratory security audit reports in high-fidelity PDF and machine-readable JSON formats.
+  </p>
+</div>
+
+<!-- Action Bar & Quick Nav -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="{{ url_for('reports.compare') }}" class="btn btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
+        <polyline points="16 3 21 3 21 8"></polyline>
+        <line x1="4" y1="20" x2="21" y2="3"></line>
+        <polyline points="21 16 21 21 16 21"></polyline>
+        <line x1="15" y1="15" x2="21" y2="21"></line>
+        <line x1="4" y1="4" x2="9" y2="9"></line>
+      </svg>
+      Scan Differential Comparison Tool
+    </a>
+    <a href="{{ url_for('scans.index') }}" class="btn btn-secondary">
+      &larr; Security Scanners
+    </a>
+  </div>
+
+  <!-- Filter Bar -->
+  <form method="GET" action="{{ url_for('reports.index') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+    <select name="type" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onchange="this.form.submit()">
+      <option value="">All Report Types</option>
+      <option value="SCAN" {% if current_type == 'SCAN' %}selected{% endif %}>Automated Scans</option>
+      <option value="ASSESSMENT" {% if current_type == 'ASSESSMENT' %}selected{% endif %}>Offensive Assessments</option>
+      <option value="COMPARISON" {% if current_type == 'COMPARISON' %}selected{% endif %}>Comparisons</option>
+    </select>
+    <select name="format" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onchange="this.form.submit()">
+      <option value="">All Formats</option>
+      <option value="pdf" {% if current_format == 'pdf' %}selected{% endif %}>PDF Documents</option>
+      <option value="json" {% if current_format == 'json' %}selected{% endif %}>JSON Artifacts</option>
+    </select>
+  </form>
+</div>
+
+<div class="grid" style="grid-template-columns: 2fr 1fr; gap: 2rem;">
+  <!-- Reports Table -->
+  <div class="card">
+    <h2>Generated Security Reports ({{ reports|length }})</h2>
+    {% if reports %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Report Title</th>
+              <th>Type</th>
+              <th>Format</th>
+              <th>Generated At</th>
+              <th>Downloads</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in reports %}
+              <tr>
+                <td><code>#{{ r.id }}</code></td>
+                <td>
+                  <strong>{{ r.title }}</strong>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-mono);">{{ r.uuid }}</div>
+                </td>
+                <td>
+                  <span class="badge" style="background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-size: 0.75rem;">
+                    {{ r.report_type }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-green); font-size: 0.75rem; text-transform: uppercase;">
+                    {{ r.file_format }}
+                  </span>
+                </td>
+                <td style="font-size: 0.8rem; color: var(--text-secondary);">
+                  {{ r.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </td>
+                <td style="text-align: center; font-size: 0.85rem;">
+                  {{ r.download_count }}
+                </td>
+                <td>
+                  <a href="{{ url_for('reports.download_report', report_id=r.id) }}" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 2px;">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-secondary);">
+        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No security assessment reports currently generated.</p>
+        <p style="font-size: 0.85rem;">Select an assessment or automated scan using the form on the right to compile your first report.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Generate Report Form Card -->
+  <div class="card">
+    <h2>Generate Security Report</h2>
+    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">
+      Compile persisted assessment findings into an official audit document.
+    </p>
+
+    <form method="POST" action="{{ url_for('reports.generate') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="report_type">Report Source Category</label>
+        <select id="report_type" name="report_type" class="form-control" onchange="toggleReportSelectors(this.value)" required>
+          <option value="scan">Automated Security Scan (Phase 6)</option>
+          <option value="assessment">Offensive Assessment (Phase 4)</option>
+          <option value="comparison">Scan Comparison Differential</option>
+        </select>
+      </div>
+
+      <!-- Scan Selector -->
+      <div id="scan_selector_box" class="form-group" style="margin-bottom: 1rem;">
+        <label for="scan_id">Select Security Scan</label>
+        <select id="scan_id" name="scan_id" class="form-control">
+          {% for s in recent_scans %}
+            <option value="{{ s.id }}">Scan #{{ s.id }} &mdash; {{ s.scanner_type|upper }} ({{ s.status }}, {{ s.total_findings }} findings)</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Assessment Selector -->
+      <div id="assessment_selector_box" class="form-group" style="margin-bottom: 1rem; display: none;">
+        <label for="assessment_id">Select Offensive Assessment</label>
+        <select id="assessment_id" name="assessment_id" class="form-control">
+          {% for a in recent_assessments %}
+            <option value="{{ a.id }}">Assessment #{{ a.id }} &mdash; {{ a.target.name if a.target else 'Target' }} ({{ a.status }}, {{ a.confirmed_vulnerabilities }} confirmed)</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Comparison Selector -->
+      <div id="comparison_selector_box" style="display: none; margin-bottom: 1rem;">
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label for="scan_a_id">Baseline Scan (Earlier)</label>
+          <select id="scan_a_id" name="scan_a_id" class="form-control">
+            {% for s in recent_scans %}
+              <option value="{{ s.id }}">Scan #{{ s.id }} &mdash; {{ s.scanner_type|upper }} ({{ s.created_at.strftime('%m-%d %H:%M') }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="scan_b_id">Comparison Scan (Later)</label>
+          <select id="scan_b_id" name="scan_b_id" class="form-control">
+            {% for s in recent_scans %}
+              <option value="{{ s.id }}">Scan #{{ s.id }} &mdash; {{ s.scanner_type|upper }} ({{ s.created_at.strftime('%m-%d %H:%M') }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="file_format">Document Format</label>
+        <select id="file_format" name="file_format" class="form-control" required>
+          <option value="pdf">Official PDF Document (.pdf)</option>
+          <option value="json">Machine-Readable JSON Artifact (.json)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+        Compile &amp; Generate Report
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleReportSelectors(val) {
+  const scanBox = document.getElementById("scan_selector_box");
+  const asmBox = document.getElementById("assessment_selector_box");
+  const compBox = document.getElementById("comparison_selector_box");
+
+  scanBox.style.display = "none";
+  asmBox.style.display = "none";
+  compBox.style.display = "none";
+
+  if (val === "scan") {
+    scanBox.style.display = "block";
+  } else if (val === "assessment") {
+    asmBox.style.display = "block";
+  } else if (val === "comparison") {
+    compBox.style.display = "block";
+  }
+}
+</script>
+{% endblock %}

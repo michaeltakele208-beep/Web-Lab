@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Secure Lab Edition - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase">
+    Defended Reference Edition &bull; Security Controls Active
+  </span>
+  <h1>Secure Reference Edition</h1>
+  <p>
+    This edition demonstrates verified remediation controls, defensive parameter binding, contextual output encoding,
+    server-side authorization checks, and defense-in-depth security headers.
+  </p>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Scenario A: Parameterized SQL Lookup</h2>
+    <p>SQLAlchemy prepared statement parameter binding (:category).</p>
+    <a href="{{ url_for('lab_secure.sqli_demo') }}" class="btn btn-sm">Open Secure Feature</a>
+  </div>
+
+  <div class="card">
+    <h2>Scenario B: Auto-Escaped Comment Stream</h2>
+    <p>Context-aware HTML entity encoding prevents markup injection.</p>
+    <a href="{{ url_for('lab_secure.xss_demo') }}" class="btn btn-sm">Open Secure Feature</a>
+  </div>
+
+  <div class="card">
+    <h2>Scenario C: Object-Level Authorization</h2>
+    <p>Enforced server-side ownership verification prevents unauthorized horizontal access.</p>
+    <a href="{{ url_for('lab_secure.record_demo', record_id=1) }}" class="btn btn-sm">View Secure Record #1</a>
+  </div>
+
+  <div class="card">
+    <h2>Scenario D: Hardened Security Headers</h2>
+    <p>Enforced Content-Security-Policy, nosniff, DENY, and Referrer-Policy.</p>
+    <a href="{{ url_for('lab_secure.headers_demo') }}" class="btn btn-sm">Inspect Secure Headers</a>
+  </div>
+</div>
+{% endblock %}

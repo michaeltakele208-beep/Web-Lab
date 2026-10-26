@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase">Identity &amp; Profile</span>
+  <h1>{{ user.display_name }}</h1>
+  <p>Authorized participant account details within the laboratory boundary.</p>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Account Information</h2>
+    <ul>
+      <li><strong>User ID:</strong> <span class="code-pill">#{{ user.id }}</span></li>
+      <li><strong>Email:</strong> {{ user.email }}</li>
+      <li>
+        <strong>Role:</strong>
+        <span class="badge badge-{{ 'admin' if user.role == 'admin' else ('analyst' if user.role == 'security_analyst' else 'user') }}">
+          {{ user.role }}
+        </span>
+      </li>
+      <li>
+        <strong>Status:</strong>
+        <span class="badge badge-{{ user.status }}">
+          {{ user.status }}
+        </span>
+      </li>
+      <li><strong>Registered:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M UTC') if user.created_at else 'N/A' }}</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Update Profile</h2>
+    <p>Participants may update their display name. Role and status privileges are managed strictly by administrators.</p>
+    
+    <form action="{{ url_for('profile.view_profile') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="display_name">Display Name</label>
+        <input
+          type="text"
+          id="display_name"
+          name="display_name"
+          class="form-control"
+          required
+          minlength="2"
+          maxlength="50"
+          value="{{ user.display_name }}"
+        >
+      </div>
+
+      <button type="submit" class="btn btn-sm">Save Changes</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

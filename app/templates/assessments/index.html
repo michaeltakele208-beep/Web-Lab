@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Security Assessments - Web Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase" style="background-color: rgba(139, 92, 246, 0.15); color: var(--accent-purple); border-color: rgba(139, 92, 246, 0.3);">
+    Analyst &amp; Admin Restricted Area
+  </span>
+  <h1>Security Assessment Console</h1>
+  <p>Automated offensive testing engine, scenario execution, and forensic evidence collection.</p>
+</div>
+
+<!-- Launch New Assessment Section -->
+<div class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--accent-purple);">
+  <h2>Launch Offensive Security Assessment</h2>
+  <p>Execute controlled, automated vulnerability tests against an authorized local lab target.</p>
+
+  {% if targets %}
+    <form method="POST" action="{{ url_for('assessments.run_assessment') }}" class="form-container" style="max-width: 100%;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
+        <div>
+          <label for="target_id" class="form-label">Authorized Lab Target</label>
+          <select name="target_id" id="target_id" class="form-input" required>
+            {% for t in targets %}
+              <option value="{{ t.id }}">{{ t.name }} ({{ t.base_url }}) [{{ t.environment_id }}]</option>
+            {% endfor %}
+          </select>
+          <span class="form-hint">Only pre-authorized internal lab targets may be assessed.</span>
+        </div>
+
+        <div>
+          <label for="target_edition" class="form-label">Evaluation Target Edition</label>
+          <select name="target_edition" id="target_edition" class="form-input" required>
+            <option value="both" selected>Both Editions (Comparative Differential Test)</option>
+            <option value="vulnerable">Vulnerable Edition Only (/lab/vulnerable/*)</option>
+            <option value="secure">Secure Reference Edition Only (/lab/secure/*)</option>
+          </select>
+          <span class="form-hint">Comparative testing runs both editions to verify defensive differentiation.</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label class="form-label">Select Scenarios to Test</label>
+        <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; margin-top: 0.5rem;">
+          {% for s in scenarios %}
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.75rem 1rem; border-radius: 6px; display: flex; align-items: flex-start; gap: 0.75rem;">
+              <input type="checkbox" name="scenarios" id="scen_{{ s.scenario_id }}" value="{{ s.scenario_id }}" checked style="margin-top: 0.25rem;">
+              <div>
+                <label for="scen_{{ s.scenario_id }}" style="font-weight: 600; cursor: pointer; display: block;">{{ s.scenario_id }}</label>
+                <span style="font-size: 0.85rem; color: var(--text-secondary); display: block;">{{ s.title }}</span>
+                <span class="badge badge-{{ 'admin' if s.severity == 'HIGH' else ('analyst' if s.severity == 'MEDIUM' else 'user') }}" style="font-size: 0.7rem; margin-top: 0.25rem;">{{ s.severity }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <button type="submit" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Run Offensive Assessment
+        </button>
+        <span class="form-hint">Execution runs in-process with strict timeouts and evidence sanitization.</span>
+      </div>
+    </form>
+  {% else %}
+    <div class="alert-box" style="margin-top: 1rem;">
+      <strong>No Authorized Targets:</strong> No authorized lab targets are currently configured.
+      <p style="margin: 0.5rem 0; font-size: 0.85rem;">Run <code>flask lab seed</code> in your terminal to automatically provision the default local laboratory target (<code>http://127.0.0.1:5000</code>).</p>
+      {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.lab_console') }}" class="btn btn-secondary btn-sm" style="margin-top: 0.5rem;">Manage Targets Console</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<!-- Recent Assessment Runs Section -->
+<div class="card" style="margin-bottom: 2rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2>Recent Assessment Runs</h2>
+    <a href="{{ url_for('assessments.history') }}" class="btn btn-secondary btn-sm">View Full History</a>
+  </div>
+
+  {% if recent_assessments %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Target</th>
+            <th>Edition</th>
+            <th>Status</th>
+            <th>Tests</th>
+            <th>Confirmed Vulns</th>
+            <th>Passed Checks</th>
+            <th>Errors</th>
+            <th>Initiator</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in recent_assessments %}
+            <tr>
+              <td><span class="code-pill">#{{ a.id }}</span></td>
+              <td><strong>{{ a.target.name if a.target else 'Target #' ~ a.target_id }}</strong></td>
+              <td><span class="code-pill" style="font-size: 0.75rem;">{{ a.target_edition }}</span></td>
+              <td>
+                <span class="badge badge-{{ 'user' if a.status == 'completed' else ('analyst' if a.status == 'completed_with_errors' else ('admin' if a.status == 'failed' else 'secondary')) }}">
+                  {{ a.status }}
+                </span>
+              </td>
+              <td>{{ a.total_tests }}</td>
+              <td>
+                {% if a.confirmed_vulnerabilities > 0 %}
+                  <span style="color: var(--danger-color); font-weight: 700;">{{ a.confirmed_vulnerabilities }}</span>
+                {% else %}
+                  0
+                {% endif %}
+              </td>
+              <td>
+                {% if a.passed_checks > 0 %}
+                  <span style="color: var(--success-color); font-weight: 700;">{{ a.passed_checks }}</span>
+                {% else %}
+                  0
+                {% endif %}
+              </td>
+              <td>
+                {% if a.error_count > 0 %}
+                  <span style="color: var(--warning-color); font-weight: 700;">{{ a.error_count }}</span>
+                {% else %}
+                  0
+                {% endif %}
+              </td>
+              <td><span style="font-size: 0.85rem;">{{ a.initiator.display_name if a.initiator else 'N/A' }}</span></td>
+              <td><span style="font-size: 0.8rem; color: var(--text-secondary);">{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}</span></td>
+              <td>
+                <a href="{{ url_for('assessments.detail', assessment_id=a.id) }}" class="btn btn-secondary btn-sm">Inspect</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-secondary);">No assessments have been recorded yet. Use the form above to run your first assessment.</p>
+  {% endif %}
+</div>
+
+<!-- Vulnerability Scenario Technical Dossiers Section -->
+<div class="card">
+  <h2>Vulnerability Scenario Technical Dossiers</h2>
+  <p>Standardized scenario definitions, CWE classifications, and expected behavioral criteria.</p>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Severity</th>
+          <th>Automated Test Adapter</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in scenarios %}
+          <tr>
+            <td><span class="code-pill">{{ s.scenario_id }}</span></td>
+            <td><strong>{{ s.title }}</strong></td>
+            <td>{{ s.category }}</td>
+            <td>
+              <span class="badge badge-{{ 'admin' if s.severity == 'HIGH' else ('analyst' if s.severity == 'MEDIUM' else 'user') }}">
+                {{ s.severity }}
+              </span>
+            </td>
+            <td><span class="code-pill" style="font-size: 0.75rem;">app.engine.adapters.{{ s.scenario_id }}</span></td>
+            <td>
+              <a href="{{ url_for('assessments.scenario_detail', scenario_id=s.scenario_id) }}" class="btn btn-secondary btn-sm">Technical Details</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

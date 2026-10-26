@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+
+{% block title %}Web Lab - Security Operations Dashboard{% endblock %}
+
+{% block content %}
+<!-- Section: Hero with Cyber Shield Art & Quick Audit -->
+<div class="hero-ref-card">
+  <div style="max-width: 780px; position: relative; z-index: 2;">
+    <span class="badge-phase" style="background-color: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border-color: rgba(6, 182, 212, 0.3); font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 9999px; display: inline-block; margin-bottom: 0.75rem;">
+      Phase 1 Foundation &bull; Phase 7 Security Operations &amp; Audit Intelligence
+    </span>
+    <h1 style="font-size: 2.1rem; font-weight: 800; margin: 0 0 0.5rem 0; color: #ffffff; letter-spacing: -0.02em;">
+      Security Operations Dashboard
+    </h1>
+    <p style="font-size: 0.95rem; color: #94a3b8; line-height: 1.5; margin: 0 0 1.5rem 0;">
+      Vulnerability Assessment and Defense Lab &mdash; Continuous security posture assessment, live URL header/TLS auditing, and static source code vulnerability inspection.
+    </p>
+
+    <!-- Quick Audit Search Bar -->
+    <div style="margin-top: 1.25rem;">
+      <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: #cbd5e1;">
+        Quick Audit: Inspect Any Website URL or Local Service
+      </div>
+      <form method="POST" action="{{ url_for('scans.scan_url') }}" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="target_url" class="scanner-text-input" style="flex: 1; min-width: 280px; background: #070d18; border-color: #334155; padding: 0.7rem 1rem; font-size: 0.9rem;"
+               placeholder="Enter URL (e.g. http://127.0.0.1:5000 or https://example.com)" required>
+        <button type="submit" class="btn btn-primary" style="background: #2563eb; padding: 0.7rem 1.4rem; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+          Analyze Website &rarr;
+        </button>
+        <a href="{{ url_for('scans.index') }}" class="btn btn-secondary" style="background: #0f172a; border-color: #334155; padding: 0.7rem 1.2rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Source Code ZIP Audit
+        </a>
+      </form>
+
+      <div class="quick-scan-chips" style="margin-top: 0.65rem;">
+        <span style="font-size: 0.8rem; color: #64748b;">Quick Presets:</span>
+        <button type="button" class="quick-chip-btn" onclick="document.querySelector('input[name=target_url]').value='http://127.0.0.1:5000'">
+          Local App (127.0.0.1:5000)
+        </button>
+        <button type="button" class="quick-chip-btn" onclick="document.querySelector('input[name=target_url]').value='https://example.com'">
+          https://example.com
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Holographic Glowing Cyber Shield Art (Reference Screenshot Match) -->
+  <svg class="hero-shield-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="shieldGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="shieldStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#38bdf8"/>
+        <stop offset="50%" stop-color="#0284c7"/>
+        <stop offset="100%" stop-color="#0369a1"/>
+      </linearGradient>
+    </defs>
+    <!-- Background glow & grid waves -->
+    <circle cx="100" cy="100" r="90" fill="url(#shieldGlow)"/>
+    <path d="M20 100 Q 100 40, 180 100" stroke="#0284c7" stroke-opacity="0.3" stroke-width="1.5" fill="none"/>
+    <path d="M20 120 Q 100 60, 180 120" stroke="#0284c7" stroke-opacity="0.25" stroke-width="1.5" fill="none"/>
+    <path d="M20 140 Q 100 80, 180 140" stroke="#0284c7" stroke-opacity="0.2" stroke-width="1.5" fill="none"/>
+    <path d="M20 80 Q 100 20, 180 80" stroke="#0284c7" stroke-opacity="0.2" stroke-width="1.5" fill="none"/>
+    <!-- Central Hexagonal Shield -->
+    <path d="M100 24 L160 52 V108 C160 146 134 174 100 186 C66 174 40 146 40 108 V52 Z" 
+          stroke="url(#shieldStroke)" stroke-width="3" fill="#08142c" fill-opacity="0.85"/>
+    <path d="M100 36 L148 58 V105 C148 136 128 159 100 170 C72 159 52 136 52 105 V58 Z" 
+          stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="4 2" fill="none"/>
+    <!-- Padlock inside shield -->
+    <rect x="86" y="98" width="28" height="22" rx="4" fill="#38bdf8" fill-opacity="0.2" stroke="#38bdf8" stroke-width="2"/>
+    <path d="M92 98 V89 C92 84.58 95.58 81 100 81 C104.42 81 108 84.58 108 89 V98" stroke="#38bdf8" stroke-width="2" fill="none"/>
+    <circle cx="100" cy="107" r="2.5" fill="#38bdf8"/>
+    <line x1="100" y1="109.5" x2="100" y2="114" stroke="#38bdf8" stroke-width="2"/>
+  </svg>
+</div>
+
+<!-- Section: Posture Grade Card (SVG Dial, Grade Pill, Active Findings Counters) -->
+<div class="grade-meter-card" style="margin-bottom: 1.75rem;">
+  {% set score = avg_score if avg_score is not none else 100 %}
+  {% set grade = overall_posture_grade or 'A+' %}
+  {% if score >= 90 %}
+    {% set ring_color = "#10b981" %}
+    {% set badge_class = "grade-badge-a" %}
+  {% elif score >= 80 %}
+    {% set ring_color = "#3b82f6" %}
+    {% set badge_class = "grade-badge-b" %}
+  {% elif score >= 70 %}
+    {% set ring_color = "#f59e0b" %}
+    {% set badge_class = "grade-badge-c" %}
+  {% elif score >= 60 %}
+    {% set ring_color = "#f97316" %}
+    {% set badge_class = "grade-badge-d" %}
+  {% else %}
+    {% set ring_color = "#ef4444" %}
+    {% set badge_class = "grade-badge-f" %}
+  {% endif %}
+  {% set dashoffset = (339.29 * (1 - score / 100))|round(1) %}
+
+  <div class="grade-dial-wrapper">
+    <svg class="grade-dial-svg" viewBox="0 0 130 130">
+      <circle class="grade-dial-bg" cx="65" cy="65" r="54" />
+      <circle class="grade-dial-progress" cx="65" cy="65" r="54"
+              stroke="{{ ring_color }}"
+              stroke-dasharray="339.29"
+              stroke-dashoffset="{{ dashoffset }}" />
+    </svg>
+    <div class="grade-dial-center">
+      <span class="grade-letter-hero" style="color: {{ ring_color }};">{{ grade }}</span>
+      <span class="grade-score-sub">{{ score }}/100</span>
+    </div>
+  </div>
+
+  <div style="flex: 1;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <div>
+        <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block; margin-bottom: 0.35rem;">
+          OVERALL PLATFORM POSTURE
+        </span>
+        <h2 style="margin: 0; font-size: 1.35rem; color: #ffffff; font-weight: 700;">
+          Organizational Security Posture Grade: {{ grade }} ({{ score }}/100)
+        </h2>
+      </div>
+      <div style="font-size: 0.85rem; color: #94a3b8; background: rgba(15, 23, 42, 0.6); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid #1e293b;">
+        Active Findings: <strong style="color: #ef4444; font-size: 0.95rem;">{{ open_findings }}</strong> &nbsp;&bull;&nbsp;
+        Verified Fixes: <strong style="color: #10b981; font-size: 0.95rem;">{{ verified_remediations }}</strong>
+      </div>
+    </div>
+    <p style="font-size: 0.88rem; color: #94a3b8; margin: 0; line-height: 1.5;">
+      Determined across {{ total_scans }} security scan evaluations using rule-based scanning across transport security, HTTP security, headers, cookie protection flags, static code analysis, and dependency CVE auditing.
+    </p>
+  </div>
+</div>
+
+<!-- Section: Operational Session Banner (Avatar Square, Boundary, 4 Pill Buttons) -->
+<div class="session-card-ref">
+  <div class="session-left-ref">
+    <div class="user-avatar-badge">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size: 0.95rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        {% if current_user %}
+          <span>Operational Sessions: <strong>{{ current_user.display_name }}</strong></span>
+          <span style="color: #64748b; font-weight: normal;">( <code>{{ current_user.email }}</code> )</span>
+          <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-size: 0.7rem; border: 1px solid rgba(59, 130, 246, 0.4);">
+            {{ current_user.role|upper }}
+          </span>
+          <span style="color: #64748b; font-size: 0.8rem;">&rsaquo;</span>
+        {% else %}
+          <span>Unauthenticated Guest Session</span>
+        {% endif %}
+      </div>
+      <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem;">
+        Security &amp; Isolation Boundary: <strong>Local Development Lab</strong> | Isolation: <strong>Non-Routable Loopback &amp; vadl-isolated-network</strong>
+      </div>
+      {% if not current_user %}
+        <div style="margin-top: 0.65rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">1-Click Role Access:</span>
+          <form action="{{ url_for('auth.login') }}" method="POST" style="margin: 0; display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="email" value="analyst@vadl.local">
+            <input type="hidden" name="password" value="AnalystPassword123!@">
+            <input type="hidden" name="next" value="{{ request.full_path or url_for('dashboard.index') }}">
+            <button type="submit" class="btn-quick-role btn-quick-analyst" title="Instant Security Analyst Evaluation Session">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              Sign In as Analyst
+            </button>
+          </form>
+          <form action="{{ url_for('auth.login') }}" method="POST" style="margin: 0; display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="email" value="admin@vadl.local">
+            <input type="hidden" name="password" value="AdminSecurePass123!@">
+            <input type="hidden" name="next" value="{{ request.full_path or url_for('dashboard.index') }}">
+            <button type="submit" class="btn-quick-role btn-quick-admin" title="Instant Lab Administrator Evaluation Session">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Sign In as Admin
+            </button>
+          </form>
+          <button type="button" class="btn-quick-role btn-quick-custom" onclick="openInlineLoginModal()">
+            Custom Credentials
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <a href="{{ url_for('lab_vulnerable.index') }}" class="btn-pill-vuln">Vulnerable Lab</a>
+    <a href="{{ url_for('lab_secure.index') }}" class="btn-pill-secure">Secure Lab</a>
+    <a href="{{ url_for('assessments.index') }}" class="btn-pill-dark">Assessments</a>
+    <a href="{{ url_for('scans.index') }}" class="btn-pill-dark">Scans</a>
+  </div>
+</div>
+
+<!-- Section: Interactive Laboratory & Security Tools (4-column grid matching reference) -->
+<div style="margin-bottom: 2.25rem;">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.85rem;">
+    <h2 style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin: 0;">Interactive Laboratory &amp; Security Tools</h2>
+    <span style="font-size: 0.8rem; color: #64748b;">Explore training scenarios, run assessments, or view reports</span>
+  </div>
+
+  <div class="tools-grid-ref">
+    <!-- Card 1: Lab Scenarios -->
+    <div class="tool-card-ref tool-card-vuln">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h3 style="margin: 0; font-size: 1rem; color: #ffffff; font-weight: 700;">Lab Scenarios</h3>
+          <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.65rem; border: 1px solid rgba(239, 68, 68, 0.4);">DUAL EDITION</span>
+        </div>
+        <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.45; margin-bottom: 1.25rem;">
+          Container (optionally) vulnerable implementations against hardened defensive references (SQLi, XSS, IDOR, Headers).
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="{{ url_for('lab_vulnerable.index') }}" class="btn-pill-vuln" style="flex: 1; text-align: center;">Vulnerable Lab</a>
+        <a href="{{ url_for('lab_secure.index') }}" class="btn-pill-secure" style="flex: 1; text-align: center;">Secure Lab</a>
+      </div>
+    </div>
+
+    <!-- Card 2: Offensive Assessments -->
+    <div class="tool-card-ref tool-card-offense">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h3 style="margin: 0; font-size: 1rem; color: #ffffff; font-weight: 700;">Offensive Assessments</h3>
+          <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-size: 0.65rem; border: 1px solid rgba(139, 92, 246, 0.4);">ADAPTERS</span>
+        </div>
+        <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.45; margin-bottom: 1.25rem;">
+          Execute automated scenario adapters (SQLi, XSS, IDOR, Headers) against authorized targets and capture sanitized evidence.
+        </p>
+      </div>
+      <div>
+        <a href="{{ url_for('assessments.index') }}" class="btn btn-primary btn-sm" style="background: #2563eb; width: 100%; text-align: center; display: block; padding: 0.45rem;">
+          Launch Assessments &rarr;
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 3: Automated Scanners -->
+    <div class="tool-card-ref tool-card-scanner">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h3 style="margin: 0; font-size: 1rem; color: #ffffff; font-weight: 700;">Automated Scanners</h3>
+          <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8; font-size: 0.65rem; border: 1px solid rgba(6, 182, 212, 0.4);">SAST / SCA / DAST</span>
+        </div>
+        <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.45; margin-bottom: 1.25rem;">
+          Run Python static analysis (Bandit), dependency vulnerability audits (pip-audit), and OWASP ZAP baseline scans.
+        </p>
+      </div>
+      <div>
+        <a href="{{ url_for('scans.index') }}" class="btn-pill-dark" style="width: 100%; text-align: center; display: block; padding: 0.45rem;">
+          Run Scanners &rarr;
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 4: Reports & Trends -->
+    <div class="tool-card-ref tool-card-reports">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h3 style="margin: 0; font-size: 1rem; color: #ffffff; font-weight: 700;">Reports &amp; Trends</h3>
+          <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 0.65rem; border: 1px solid rgba(245, 158, 11, 0.4);">PDF / JSON</span>
+        </div>
+        <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.45; margin-bottom: 1.25rem;">
+          Generate multi-page PDF security assessment reports, download JSON exports, and run differential trend analyses.
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="{{ url_for('reports.index') }}" class="btn-pill-dark" style="flex: 1; text-align: center;">Reports</a>
+        <a href="{{ url_for('reports.compare') }}" class="btn-pill-dark" style="flex: 1; text-align: center;">Compare</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section: Security Posture Metrics (Top 5 cards, Bottom 2 cards, Severity 5-box row) -->
+<div style="margin-bottom: 2.25rem;">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.85rem;">
+    <h2 style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin: 0;">Security Posture Metrics</h2>
+    <span style="font-size: 0.8rem; color: #06b6d4;">Data integrity guaranteed &bull; Persisted DB telemetry</span>
+  </div>
+
+  <!-- Row 1: 5 Metric Cards -->
+  <div class="metrics-row-5">
+    <div class="metric-box-ref box-cyan">
+      <div class="metric-val-ref">{{ total_scans }}</div>
+      <div class="metric-lbl-ref">TOTAL SCANS</div>
+      <div class="metric-sub-ref">Scanners + Assessments</div>
+    </div>
+
+    <div class="metric-box-ref box-green">
+      <div class="metric-val-ref">{{ completed_scans }}</div>
+      <div class="metric-lbl-ref">COMPLETED SCANS</div>
+      <div class="metric-sub-ref">Successful executions</div>
+    </div>
+
+    <div class="metric-box-ref box-red">
+      <div class="metric-val-ref">{{ failed_scans }}</div>
+      <div class="metric-lbl-ref">FAILED / TIMED OUT</div>
+      <div class="metric-sub-ref">Diagnostic terminations</div>
+    </div>
+
+    <div class="metric-box-ref box-purple">
+      <div class="metric-val-ref">{{ total_distinct_findings }}</div>
+      <div class="metric-lbl-ref">DISTINCT VULNERABILITIES</div>
+      <div class="metric-sub-ref">SHA-256 deduplicated</div>
+    </div>
+
+    <div class="metric-box-ref box-amber">
+      <div class="metric-val-ref">{{ open_findings }}</div>
+      <div class="metric-lbl-ref">OPEN FINDINGS</div>
+      <div class="metric-sub-ref">Status: NEW or ACTIVE</div>
+    </div>
+  </div>
+
+  <!-- Row 2: 2 Metric Cards -->
+  <div class="metrics-row-2">
+    <div class="metric-box-ref box-red">
+      <div class="metric-val-ref" style="color: #ef4444;">{{ confirmed_vulnerabilities }}</div>
+      <div class="metric-lbl-ref">CONFIRMED LAB FLAWS</div>
+      <div class="metric-sub-ref">Offensive checks passed</div>
+    </div>
+
+    <div class="metric-box-ref box-green">
+      <div class="metric-val-ref" style="color: #10b981;">{{ verified_remediations }}</div>
+      <div class="metric-lbl-ref">VERIFIED REMEDIATIONS</div>
+      <div class="metric-sub-ref">Proved regression suite</div>
+    </div>
+  </div>
+
+  <!-- Row 3: Active Findings Grouped by Normalized Severity -->
+  <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+    ACTIVE FINDINGS GROUPED BY NORMALIZED SEVERITY
+  </div>
+  <div class="severity-row-5">
+    <div class="sev-card-ref sev-card-crit">
+      <div class="sev-num">{{ severity_counts.CRITICAL }}</div>
+      <div class="sev-lbl" style="color: #ef4444;">CRITICAL</div>
+    </div>
+    <div class="sev-card-ref sev-card-high">
+      <div class="sev-num">{{ severity_counts.HIGH }}</div>
+      <div class="sev-lbl" style="color: #f97316;">HIGH</div>
+    </div>
+    <div class="sev-card-ref sev-card-med">
+      <div class="sev-num">{{ severity_counts.MEDIUM }}</div>
+      <div class="sev-lbl" style="color: #eab308;">MEDIUM</div>
+    </div>
+    <div class="sev-card-ref sev-card-low">
+      <div class="sev-num">{{ severity_counts.LOW }}</div>
+      <div class="sev-lbl" style="color: #06b6d4;">LOW</div>
+    </div>
+    <div class="sev-card-ref sev-card-info">
+      <div class="sev-num">{{ severity_counts.INFORMATIONAL }}</div>
+      <div class="sev-lbl" style="color: #94a3b8;">INFORMATIONAL</div>
+    </div>
+  </div>
+</div>
+
+<!-- Section: Scan & Assessment History (Table with Grade Badges) -->
+<div class="card" style="background: #0b1329; border: 1px solid #1e293b; border-radius: 10px; margin-bottom: 2.25rem; padding: 1.25rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin: 0;">Scan &amp; Assessment History</h2>
+      <p style="margin: 0.2rem 0 0 0; color: #64748b; font-size: 0.8rem;">
+        Combined offensive assessments and automated scanner executions. Total records: {{ total_scans_count }}.
+      </p>
+    </div>
+
+    <form method="GET" action="{{ url_for('dashboard.index') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+      <select name="scan_type" class="filter-select-ref" onchange="this.form.submit()">
+        <option value="">All Scan Categories</option>
+        <option value="scanner" {% if current_scan_type == 'scanner' %}selected{% endif %}>Automated Scanners</option>
+        <option value="assessment" {% if current_scan_type == 'assessment' %}selected{% endif %}>Offensive Assessments</option>
+      </select>
+      <select name="status" class="filter-select-ref" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        <option value="COMPLETED" {% if current_status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+        <option value="FAILED" {% if current_status == 'FAILED' %}selected{% endif %}>Failed</option>
+      </select>
+    </form>
+  </div>
+
+  {% if scans %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>GRADE</th>
+            <th>TYPE / TOOL</th>
+            <th>TARGET / APPLICATION</th>
+            <th>PROFILE</th>
+            <th>STATUS</th>
+            <th>FINDINGS / FLAWS</th>
+            <th>INITIATOR</th>
+            <th>EXECUTED AT</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in scans %}
+            <tr>
+              <td><code>#{{ s.id }}</code></td>
+              <td>
+                {% set g = s.grade or 'A' %}
+                {% set sc = s.score if s.score is not none else 100 %}
+                {% if sc >= 90 %}
+                  {% set g_class = 'grade-badge-a' %}
+                {% elif sc >= 80 %}
+                  {% set g_class = 'grade-badge-b' %}
+                {% elif sc >= 70 %}
+                  {% set g_class = 'grade-badge-c' %}
+                {% elif sc >= 60 %}
+                  {% set g_class = 'grade-badge-d' %}
+                {% else %}
+                  {% set g_class = 'grade-badge-f' %}
+                {% endif %}
+                <span class="grade-badge {{ g_class }}">
+                  {{ g }} <small style="margin-left: 2px; font-weight: normal; opacity: 0.85;">{{ sc }}</small>
+                </span>
+              </td>
+              <td>
+                <strong>{{ s.tool_type }}</strong>
+                <div style="font-size: 0.7rem; color: #64748b;">{{ s.kind|upper }}</div>
+              </td>
+              <td style="font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ s.target_url or s.target_name }}
+              </td>
+              <td><code>{{ s.profile }}</code></td>
+              <td>
+                {% if 'COMPLETED' in s.status %}
+                  <span class="badge" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.75rem;">{{ s.status }}</span>
+                {% elif 'FAILED' in s.status or 'TIMED_OUT' in s.status %}
+                  <span class="badge" style="background-color: rgba(220, 38, 38, 0.15); color: #ef4444; font-size: 0.75rem;">{{ s.status }}</span>
+                {% else %}
+                  <span class="badge" style="font-size: 0.75rem;">{{ s.status }}</span>
+                {% endif %}
+              </td>
+              <td style="font-weight: 700;">{{ s.findings_count }}</td>
+              <td style="font-size: 0.8rem; color: #94a3b8;">user #{{ s.initiator_id or '1' }}</td>
+              <td style="font-size: 0.8rem; color: #94a3b8;">
+                {{ s.created_at.strftime('%Y-%m-%d %H:%M') }}
+              </td>
+              <td>
+                <a href="{{ s.detail_url }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                  Inspect
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+      <p style="margin: 0; font-size: 0.95rem;">No scans or assessments recorded matching the current filters.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Section: Normalized Vulnerability Findings -->
+<div class="card" style="background: #0b1329; border: 1px solid #1e293b; border-radius: 10px; margin-bottom: 2.25rem; padding: 1.25rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin: 0;">Normalized Vulnerability Findings</h2>
+      <p style="margin: 0.2rem 0 0 0; color: #64748b; font-size: 0.8rem;">
+        Canonical security findings identified by SAST, SCA, and DAST engines.
+      </p>
+    </div>
+
+    <form method="GET" action="{{ url_for('dashboard.index') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+      <select name="severity" class="filter-select-ref" onchange="this.form.submit()">
+        <option value="">All Severities</option>
+        <option value="CRITICAL" {% if current_severity == 'CRITICAL' %}selected{% endif %}>Critical</option>
+        <option value="HIGH" {% if current_severity == 'HIGH' %}selected{% endif %}>High</option>
+        <option value="MEDIUM" {% if current_severity == 'MEDIUM' %}selected{% endif %}>Medium</option>
+        <option value="LOW" {% if current_severity == 'LOW' %}selected{% endif %}>Low</option>
+      </select>
+      <select name="scanner" class="filter-select-ref" onchange="this.form.submit()">
+        <option value="">All Scanners</option>
+        <option value="bandit" {% if current_scanner == 'bandit' %}selected{% endif %}>Bandit</option>
+        <option value="pip_audit" {% if current_scanner == 'pip_audit' %}selected{% endif %}>pip-audit</option>
+        <option value="zap" {% if current_scanner == 'zap' %}selected{% endif %}>ZAP</option>
+        <option value="url_inspector" {% if current_scanner == 'url_inspector' %}selected{% endif %}>URL Inspector</option>
+      </select>
+      <select name="finding_status" class="filter-select-ref" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        <option value="NEW" {% if current_finding_status == 'NEW' %}selected{% endif %}>New</option>
+        <option value="ACTIVE" {% if current_finding_status == 'ACTIVE' %}selected{% endif %}>Active</option>
+        <option value="VERIFIED" {% if current_finding_status == 'VERIFIED' %}selected{% endif %}>Verified</option>
+      </select>
+    </form>
+  </div>
+
+  {% if recent_findings %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>SEVERITY</th>
+            <th>FINDING TITLE</th>
+            <th>SCANNER</th>
+            <th>TARGET / COMPONENT</th>
+            <th>STATUS</th>
+            <th>DETECTED DATE</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in recent_findings %}
+            <tr>
+              <td>
+                {% if f.severity == 'CRITICAL' %}
+                  <span class="badge" style="background: rgba(220, 38, 38, 0.2); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.4);">CRITICAL</span>
+                {% elif f.severity == 'HIGH' %}
+                  <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);">HIGH</span>
+                {% elif f.severity == 'MEDIUM' %}
+                  <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #fbbf24; border: 1px solid rgba(234, 179, 8, 0.4);">MEDIUM</span>
+                {% elif f.severity == 'LOW' %}
+                  <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.4);">LOW</span>
+                {% else %}
+                  <span class="badge" style="background: rgba(100, 116, 139, 0.2); color: #94a3b8;">INFO</span>
+                {% endif %}
+              </td>
+              <td><strong>{{ f.title }}</strong></td>
+              <td><code>{{ f.scanner_name }}</code></td>
+              <td style="font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ f.target_component }}
+              </td>
+              <td><span class="badge">{{ f.status }}</span></td>
+              <td style="font-size: 0.8rem; color: #94a3b8;">
+                {{ f.created_at.strftime('%Y-%m-%d') }}
+              </td>
+              <td>
+                <a href="{{ url_for('scans.finding_detail', finding_id=f.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                  Inspect
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+      <p style="margin: 0; font-size: 0.95rem;">No normalized findings match the current criteria.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Section: Defensive Remediation & Verification Status (4 cards) -->
+<div style="margin-bottom: 2rem;">
+  <div style="margin-bottom: 0.85rem;">
+    <h2 style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin: 0;">Defensive Remediation &amp; Verification Status</h2>
+    <p style="margin: 0.2rem 0 0 0; color: #64748b; font-size: 0.8rem;">
+      Remediation lifecycle tracks vulnerability mitigations and re-runs automated regression checks before fixes can be certified.
+    </p>
+  </div>
+
+  <div class="remed-grid-4">
+    <div class="remed-card-ref remed-card-pending">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase;">PENDING REMEDIATIONS</span>
+        <span style="font-size: 1.5rem; font-weight: 800; color: #f59e0b; font-family: var(--font-mono);">{{ pending_remediations }}</span>
+      </div>
+      <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+        Items currently in OPEN, IN_PROGRESS, or READY_FOR_VERIFICATION awaiting defensive checks.
+      </p>
+    </div>
+
+    <div class="remed-card-ref remed-card-verified">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">VERIFIED FIXES</span>
+        <span style="font-size: 1.5rem; font-weight: 800; color: #10b981; font-family: var(--font-mono);">{{ verified_remediations }}</span>
+      </div>
+      <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+        Empirically verified fixes where automated regression suites confirmed attack neutralization with zero dependency integrity.
+      </p>
+    </div>
+
+    <div class="remed-card-ref remed-card-failed">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase;">FAILED VERIFICATION</span>
+        <span style="font-size: 1.5rem; font-weight: 800; color: #ef4444; font-family: var(--font-mono);">{{ failed_verifications }}</span>
+      </div>
+      <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+        Attempts where the defensive mitigation failed to neutralize the exploit payload, or broke legitimate functional behavior.
+      </p>
+    </div>
+
+    <div class="remed-card-ref remed-card-inconclusive">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #3b82f6; text-transform: uppercase;">INCONCLUSIVE</span>
+        <span style="font-size: 1.5rem; font-weight: 800; color: #3b82f6; font-family: var(--font-mono);">{{ inconclusive_verifications }}</span>
+      </div>
+      <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+        Verification runs yielding inconclusive or ambiguous HTTP responses that could not establish defensive efficacy.
+      </p>
+    </div>
+  </div>
+
+  {% if not recent_remediations %}
+    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">No remediation tracks currently created.</p>
+  {% endif %}
+</div>
+{% endblock %}

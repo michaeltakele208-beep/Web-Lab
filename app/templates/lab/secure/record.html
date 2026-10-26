@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Secure Record - Web Lab Lab{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <span class="badge-phase">
+    Scenario C &bull; Secure Edition (VADL-AC-001)
+  </span>
+  <h1>Confidential Record #{{ record.id }}</h1>
+  <p>Broken Object Level Authorization (IDOR) Mitigated: Server-side ownership validated.</p>
+</div>
+
+<div class="card">
+  <h2>Record Details (Ownership Verified)</h2>
+  <ul>
+    <li><strong>Record ID:</strong> <span class="code-pill">#{{ record.id }}</span></li>
+    <li><strong>Authorized Owner:</strong> {{ record.owner_username }}</li>
+    <li><strong>Record Title:</strong> {{ record.title }}</li>
+    <li><strong>Confidential Content:</strong></li>
+  </ul>
+  <div style="background-color: #0b1120; border: 1px solid var(--border-color); padding: 1rem; border-radius: 6px; margin-top: 1rem; font-family: var(--font-mono); color: #34d399;">
+    {{ record.confidential_note }}
+  </div>
+</div>
+{% endblock %}
